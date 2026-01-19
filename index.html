@@ -1788,7 +1788,7 @@
         calculateResults();
       }
       // Proceed with print
-      printResult();
+      printCurrent(); // FIXED: was calling undefined printResult()
     }
 
     const triggerAutoCalc = debounce(() => {
@@ -1852,10 +1852,39 @@
           }
         }
 
-        // Update metrics display
+        // Calculate limits FIRST (before metrics display) to determine if Avg Count is out of range
+        const rangeInput = document.getElementById('txtRange');
+        const rangeVal = (rangeInput && rangeInput.value) ? parseFloat(rangeInput.value) : 2.5;
+        const selCountEl = document.getElementById('selCount');
+        const selCountVal = selCountEl ? selCountEl.value : '';
+        const valMatch = selCountVal.match(/[\d.]+/);
+        const selCount = valMatch ? parseFloat(valMatch[0]) : NaN;
+        const countTarget = (isFinite(selCount) && selCount > 0) ? selCount : null;
+
+        console.log(`Debug Calc: Range=${rangeVal}, SelCountVal="${selCountVal}", Parsed=${selCount}, Target=${countTarget}`);
+
+        // Calculate Limits based on Target (spec) or Mean (control)
+        let lcl, ucl;
+        if (countTarget) {
+          lcl = countTarget * (1 - rangeVal / 100);
+          ucl = countTarget * (1 + rangeVal / 100);
+        } else {
+          // Fallback to Mean if no target (CONTROL limits logic)
+          const countMean = parseFloat(avgCount);
+          lcl = countMean * (1 - rangeVal / 100);
+          ucl = countMean * (1 + rangeVal / 100);
+        }
+
+        // Check if Avg Count is out of range for metric box coloring
+        const avgCountNum = parseFloat(avgCount);
+        const isCountOutOfRange = (avgCountNum < lcl || avgCountNum > ucl);
+        const countMetricStyle = isCountOutOfRange ?
+          'background-color: #ef4444 !important;' : '';
+
+        // Update metrics display with conditional red styling
         const metricsDiv = document.getElementById('metrics');
         metricsDiv.innerHTML = `
-             <div class="metric"><div class="label">Avg Count</div><div class="value">${avgCount}</div></div>
+             <div class="metric" style="${countMetricStyle}"><div class="label">Avg Count</div><div class="value">${avgCount}</div></div>
              <div class="metric"><div class="label">Avg Strength</div><div class="value">${avgStrength}</div></div>
              <div class="metric"><div class="label">Avg CSP</div><div class="value">${avgCSP}</div></div>
              <div class="metric"><div class="label">Count CV%</div><div class="value">${countCV}%</div></div>
@@ -1872,34 +1901,11 @@
         const chartsContainer = document.getElementById('chartsGrid');
         chartsContainer.style.display = 'grid'; // Ensure it's visible
 
-        // 1. Count Chart (with User Defined Range)
-        const rangeInput = document.getElementById('txtRange');
-        const rangeVal = (rangeInput && rangeInput.value) ? parseFloat(rangeInput.value) : 2.5;
-
+        // 1. Count Chart (with User Defined Range) - limits already calculated above
         const countChartId = 'chart_count_dist';
         chartsContainer.appendChild(makeChartCard(`Count Distribution (Ne) - Limits +/-${rangeVal}%`, countChartId));
         const countMean = parseFloat(avgCount);
-        const selCountEl = document.getElementById('selCount');
-        const selCountVal = selCountEl ? selCountEl.value : '';
-        // Extract first number found
-        const valMatch = selCountVal.match(/[\d.]+/);
-        const selCount = valMatch ? parseFloat(valMatch[0]) : NaN;
-        const countTarget = (isFinite(selCount) && selCount > 0) ? selCount : null;
-
-        console.log(`Debug Calc: Range=${rangeVal}, SelCountVal="${selCountVal}", Parsed=${selCount}, Target=${countTarget}`);
-
-        // Calculate Limits based on Target (spec) or Mean (control)
-        // User requested "use this value [acceptable range] ... to claucluate the status and LCL and UCL"
-        // Implies Spec Limits relative to Target.
-        let lcl, ucl;
-        if (countTarget) {
-          lcl = countTarget * (1 - rangeVal / 100);
-          ucl = countTarget * (1 + rangeVal / 100);
-        } else {
-          // Fallback to Mean if no target (CONTROL limits logic)
-          lcl = countMean * (1 - rangeVal / 100);
-          ucl = countMean * (1 + rangeVal / 100);
-        }
+        // lcl/ucl already calculated above - no need to recalculate
 
         // Update Status Column
         const tableRows = document.querySelectorAll('#testTableBody tr');
@@ -4283,7 +4289,9 @@
       if (selectedProducts.includes('__CUSTOM_PRODUCT__')) {
         const customProducts = new Set();
         for (const t of tests) {
-          const g = groupData(t.cardRows || []);
+          // FIXED: Support both cardRows (Sliver) and rows (Count & Strength)
+          const dataRows = t.cardRows || t.rows || [];
+          const g = groupData(dataRows);
           Object.keys(g).forEach(p => {
             if (!PRODUCT_OPTIONS_BASE.includes(p)) {
               customProducts.add(p);
@@ -4297,7 +4305,9 @@
       // Combine by product across tests for printing (never combine different products)
       const combinedGroups = {};
       for (const t of tests) {
-        const g = groupData(t.cardRows || []);
+        // FIXED: Support both cardRows (Sliver) and rows (Count & Strength)
+        const dataRows = t.cardRows || t.rows || [];
+        const g = groupData(dataRows);
         for (const p of Object.keys(g)) {
           // If products are selected, only include selected products
           if (selectedProducts.length > 0 && !selectedProducts.includes(p)) {
