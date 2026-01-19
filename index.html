@@ -1843,8 +1843,14 @@
           const countChartId = 'chart_count_dist';
           chartsContainer.appendChild(makeChartCard(`Count Distribution (Ne) - Limits +/-${rangeVal}%`, countChartId));
           const countMean = parseFloat(avgCount);
-          const selCount = parseFloat(document.getElementById('selCount').value);
+          const selCountEl = document.getElementById('selCount');
+          const selCountVal = selCountEl ? selCountEl.value : '';
+          // Extract first number found
+          const valMatch = selCountVal.match(/[\d.]+/);
+          const selCount = valMatch ? parseFloat(valMatch[0]) : NaN;
           const countTarget = (isFinite(selCount) && selCount > 0) ? selCount : null;
+
+          console.log(`Debug Calc: Range=${rangeVal}, SelCountVal="${selCountVal}", Parsed=${selCount}, Target=${countTarget}`);
 
           // Calculate Limits based on Target (spec) or Mean (control)
           // User requested "use this value [acceptable range] ... to claucluate the status and LCL and UCL"
@@ -1921,6 +1927,11 @@
 
           const rowsData = [];
           const rows = document.querySelectorAll('#testTableBody tr');
+
+          if (rows.length === 0) {
+            throw new Error("No data rows to save. Please add samples.");
+          }
+
           rows.forEach((row, i) => {
             // Basic extraction with fallback
             rowsData.push({
