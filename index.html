@@ -5972,6 +5972,7 @@
     let serialPort = null;
     let serialReader = null;
     let activeWeightInput = null;
+    let keepReadingScale = false;
 
     function setActiveInput(input) {
       activeWeightInput = input;
@@ -6002,7 +6003,8 @@
       const btn = document.getElementById('btnConnectScale');
 
       // If already connected, disconnect
-      if (serialPort && serialPort.readable) {
+      if (serialPort && serialPort.readable && keepReadingScale) {
+        keepReadingScale = false;
         try {
           // Cancel the reader to break the loop
           if (serialReader) {
@@ -6035,6 +6037,7 @@
         btn.textContent = "Disconnect Scale";
         btn.style.background = "#c0392b"; // Red for disconnect action
 
+        keepReadingScale = true;
         // Start reading loop
         readSerialLoop();
       } catch (err) {
@@ -6044,7 +6047,7 @@
     }
 
     async function readSerialLoop() {
-      while (serialPort.readable) {
+      while (serialPort.readable && keepReadingScale) {
         serialReader = serialPort.readable.getReader();
         try {
           while (true) {
