@@ -1133,7 +1133,7 @@
         <button class="btn-muted" onclick="openConfig()"
           style="padding: 6px 12px; font-size: 13px;">Configuration</button>
         <button class="btn-danger" onclick="logout()"
-          style="margin: 0; padding: 6px 12px; font-size: 13px;">Logout</button>
+          style="margin: 0; padding: 6px 12px; font-size: 13px; display: none;">Logout</button>
       </div>
     </div>
 
@@ -1610,9 +1610,13 @@
     }
 
     function checkLogin() {
-      const isLoggedIn = sessionStorage.getItem('spinQ_isLoggedIn') === 'true';
-      const users = getUsers();
-      const hasUsers = Object.keys(users).length > 0;
+      // FORCE LOGIN (Soft Bypass)
+      const isLoggedIn = true;
+
+      // Auto-set user if missing
+      if (!sessionStorage.getItem('spinQ_currentUser')) {
+        sessionStorage.setItem('spinQ_currentUser', 'admin');
+      }
 
       const loginView = document.getElementById('loginView');
       const signupView = document.getElementById('signupView');
@@ -1624,16 +1628,9 @@
       if (mainAppView) mainAppView.style.display = 'none';
       if (configView) configView.style.display = 'none';
 
-      if (isLoggedIn) {
-        if (mainAppView) mainAppView.style.display = 'block';
-        populateMainDropdowns();
-      } else {
-        if (!hasUsers) {
-          toggleSignup();
-        } else {
-          if (loginView) loginView.style.display = 'flex';
-        }
-      }
+      // Always show Main App
+      if (mainAppView) mainAppView.style.display = 'block';
+      populateMainDropdowns();
     }
 
     function handleLogin() {
