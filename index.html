@@ -5977,6 +5977,20 @@
       activeWeightInput = input;
     }
 
+    // Add ENTER key navigation to weight inputs
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && e.target.classList.contains('weight-val')) {
+        e.preventDefault(); // Prevent form submission or default
+        const allWeights = Array.from(document.querySelectorAll('.weight-val'));
+        const currentIndex = allWeights.indexOf(e.target);
+        if (currentIndex !== -1 && currentIndex < allWeights.length - 1) {
+          const nextInput = allWeights[currentIndex + 1];
+          nextInput.focus();
+          setActiveInput(nextInput);
+        }
+      }
+    });
+
     // Function to update Source based on manual entry vs scale
     function updateSource(input, type = 'Manual') {
       const row = input.closest('tr');
@@ -6108,15 +6122,6 @@
         // Flash effect
         targetInput.style.backgroundColor = "#d1fae5";
         setTimeout(() => targetInput.style.backgroundColor = "", 500);
-
-        // Auto-advance to next input
-        const allWeights = Array.from(document.querySelectorAll('.weight-val'));
-        const currentIndex = allWeights.indexOf(targetInput);
-        if (currentIndex !== -1 && currentIndex < allWeights.length - 1) {
-          const nextInput = allWeights[currentIndex + 1];
-          nextInput.focus();
-          setActiveInput(nextInput); // Ensure next reading goes here
-        }
       }
     }
   </script>
