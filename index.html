@@ -1435,6 +1435,7 @@
           <tr>
             <th><input type="checkbox" onchange="toggleSelectAll(this)"></th>
             <th>Date Time</th>
+            <th>Report #</th>
             <th>Machine</th>
             <th>Product</th>
             <th>Process</th>
@@ -3946,6 +3947,7 @@
           tr.innerHTML = `
             <td><input type="checkbox" onchange="onSavedSelectionChanged()"></td>
             <td>${escapeHtml(test.dateTime || 'N/A')}</td>
+            <td>${escapeHtml(test.reportNumber || 'N/A')}</td>
             <td>${escapeHtml(test.machine || test.machineId || '-')}</td>
             <td>${escapeHtml(test.product || '-')}</td>
             <td>${escapeHtml(test.process || '-')}</td>
@@ -5530,13 +5532,14 @@
 
         // Summary sheet
         const summaryData = [
-          ['Date Time', 'Machine', 'Product', 'Process', 'Lot', 'Count (Target)', 'Avg count', 'Count CV%', 'Avg Strength', 'CSP', 'Out of limit', 'Report #', 'Operator']
+          ['Date Time', 'Report #', 'Machine', 'Product', 'Process', 'Lot', 'Count (Target)', 'Avg count', 'Count CV%', 'Avg Strength', 'CSP', 'Out of limit', 'Operator']
         ];
 
         testsToExport.forEach(test => {
           if (test.testType === 'Count & Strength') {
             summaryData.push([
               test.dateTime || 'N/A',
+              test.reportNumber || 'N/A',
               test.machine || test.machineId || '-',
               test.product || '-',
               test.process || '-',
@@ -5547,7 +5550,6 @@
               test.avgStrength || '-',
               test.avgCSP || '-',
               (test.outOfLimitCount || '0.0') + '%',
-              test.reportNumber || 'N/A',
               test.operatorName || 'N/A'
             ]);
           } else {
