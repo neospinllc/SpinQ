@@ -5057,7 +5057,11 @@
     // -----------------------------
     function printDetails() {
       if (!detailsTest) return;
-      printFromTests([detailsTest], `Saved Report ${detailsTest.reportNumber}`);
+      if (detailsTest.testType === 'Count & Strength' || detailsTest.rawData) {
+        printCountStrengthTest(detailsTest, 'all');
+      } else {
+        printFromTests([detailsTest], `Saved Report ${detailsTest.reportNumber}`);
+      }
     }
 
     function printCurrent(mode = 'all') {
@@ -5312,7 +5316,12 @@
       if (indices.length === 0) { alert('Please select at least one saved test.'); return; }
       const saved = getSavedTests();
       const selectedTests = indices.map(i => saved[i]).filter(Boolean);
-      printFromTests(selectedTests, `Selected Tests (${selectedTests.length})`);
+
+      if (selectedTests.length === 1 && (selectedTests[0].testType === 'Count & Strength' || selectedTests[0].rawData)) {
+        printCountStrengthTest(selectedTests[0], 'all');
+      } else {
+        printFromTests(selectedTests, `Selected Tests (${selectedTests.length})`);
+      }
     }
 
     function printFromTests(tests, modeLabel) {
