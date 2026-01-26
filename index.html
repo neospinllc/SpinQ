@@ -1039,17 +1039,41 @@
 
 <body>
   <script>
-    alert("Debug: Page Loaded");
-    // Fail-safe to ensure visibility
-    window.onerror = function (msg, url, line) {
-      alert("Error: " + msg + "\nLine: " + line);
-    };
     document.addEventListener('DOMContentLoaded', function () {
-      const app = document.getElementById('mainAppView');
-      if (app) {
+      try {
+        const app = document.getElementById('mainAppView');
+        if (!app) {
+          alert("CRITICAL: mainAppView NOT FOUND");
+          return;
+        }
+
+        const style = window.getComputedStyle(app);
+        const info = "App Found:\\n" +
+          "Content Length: " + app.innerHTML.length + "\\n" +
+          "Display: " + style.display + "\\n" +
+          "Visibility: " + style.visibility + "\\n" +
+          "Opacity: " + style.opacity + "\\n" +
+          "Z-Index: " + style.zIndex + "\\n" +
+          "Height: " + style.height + "\\n" +
+          "Width: " + style.width;
+
+        alert(info);
+
+        // Force visibility
         app.style.display = 'block';
         app.style.visibility = 'visible';
         app.style.opacity = '1';
+        app.style.zIndex = '999999';
+        app.style.position = 'relative';
+        app.style.border = '5px solid red';
+        app.style.backgroundColor = 'white';
+        app.style.minHeight = '500px';
+
+        document.body.style.backgroundColor = 'white';
+        document.body.style.overflow = 'visible';
+
+      } catch (e) {
+        alert("Debug Error: " + e.message);
       }
     });
   </script>
@@ -1057,43 +1081,7 @@
   <!-- CONFIGURATION VIEW -->
 
   <!-- CONFIGURATION VIEW -->
-  <div id="configView" class="container" style="display: none;">
-    <div class="config-header">
-      <h2 style="margin: 0;">System Configuration</h2>
-      <div>
-        <span id="configSaveStatus"
-          style="color: #27ae60; font-weight: 600; margin-right: 15px; opacity: 0; transition: opacity 0.5s;">Saved!</span>
-        <button class="btn-muted" onclick="exitConfig()">Back to Test</button>
-      </div>
-    </div>
-    <div class="config-grid">
-      <div class="config-card">
-        <div class="card-title">Machines</div>
-        <div class="card-subtitle">Separated by comma or new line</div>
-        <textarea id="cfgMachines" class="config-textarea" placeholder="M1, M2, M3..."></textarea>
-      </div>
-      <div class="config-card">
-        <div class="card-title">Products</div>
-        <div class="card-subtitle">Separated by comma or new line</div>
-        <textarea id="cfgProducts" class="config-textarea" placeholder="P1, P2..."></textarea>
-      </div>
-      <div class="config-card">
-        <div class="card-title">Processes</div>
-        <div class="card-subtitle">Separated by comma or new line</div>
-        <textarea id="cfgProcesses" class="config-textarea" placeholder="Carding, Drawing..."></textarea>
-      </div>
-      <div class="config-card">
-        <div class="card-title">Lot Numbers</div>
-        <div class="card-subtitle">Separated by comma or new line</div>
-        <textarea id="cfgLots" class="config-textarea" placeholder="L001, L002..."></textarea>
-      </div>
-      <div class="config-card">
-        <div class="card-title">Yarn Counts</div>
-        <div class="card-subtitle">Separated by comma or new line</div>
-        <textarea id="cfgCounts" class="config-textarea" placeholder="30s, 40s..."></textarea>
-      </div>
-    </div>
-  </div>
+  <!-- CONFIGURATION REMOVED FOR DEBUGGING -->
 
   <!-- MAIN APP VIEW -->
   <!-- MAIN APP VIEW -->
