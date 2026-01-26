@@ -1045,44 +1045,6 @@
       onclick="document.getElementById('mobileWarning').style.display='none'">×</button>
   </div>
 
-  <!-- LOGIN VIEW -->
-  <div id="loginView" class="container-center">
-    <div class="login-card">
-      <div class="login-title">SpinQ Login</div>
-      <div class="form-group">
-        <label class="form-label">User ID</label>
-        <input type="text" id="loginUser" class="form-input" placeholder="Enter User ID">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" id="loginPass" class="form-input" placeholder="Enter Password">
-      </div>
-      <div id="loginError" style="color: #e74c3c; margin-bottom: 15px; display: none;">Invalid credentials</div>
-      <button class="btn-start btn-block" onclick="handleLogin()">Login</button>
-      <div style="margin-top: 15px; font-size: 14px; color: #7f8c8d;">
-        No account? <a href="#" onclick="toggleSignup()" style="color: #3498db; text-decoration: none;">Create one</a>
-      </div>
-    </div>
-  </div>
-
-  <div id="signupView" class="container-center" style="display: none;">
-    <div class="login-card">
-      <div class="login-title">Create Account</div>
-      <div class="form-group">
-        <label class="form-label">New User ID</label>
-        <input type="text" id="signupUser" class="form-input" placeholder="Choose User ID">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" id="signupPass" class="form-input" placeholder="Choose Password">
-      </div>
-      <button class="btn-start btn-block" onclick="handleSignup()">Create Account</button>
-      <div style="margin-top: 15px; font-size: 14px; color: #7f8c8d;">
-        <a href="#" onclick="toggleSignup()" style="color: #3498db; text-decoration: none;">Back to Login</a>
-      </div>
-    </div>
-  </div>
-
   <!-- CONFIGURATION VIEW -->
   <div id="configView" class="container" style="display: none;">
     <div class="config-header">
@@ -1132,8 +1094,7 @@
         <div class="current-date" id="currentDate" style="min-width: auto;"></div>
         <button class="btn-muted" onclick="openConfig()"
           style="padding: 6px 12px; font-size: 13px;">Configuration</button>
-        <button class="btn-danger" onclick="logout()"
-          style="margin: 0; padding: 6px 12px; font-size: 13px;">Logout</button>
+
       </div>
     </div>
 
@@ -1636,80 +1597,8 @@
       }
     }
 
-    function handleLogin() {
-      console.log("Attempting login...");
-      const userInput = document.getElementById('loginUser');
-      const passInput = document.getElementById('loginPass');
+    // Authentication functions removed as per request (embedded mode)
 
-      const user = userInput.value.trim();
-      const pass = passInput.value.trim();
-
-      if (!user || !pass) {
-        alert("Please enter both User ID and Password");
-        return;
-      }
-
-      let users = getUsers();
-
-      // Auto-seed if no users exist
-      if (Object.keys(users).length === 0) {
-        console.log("No users found. Seeding admin/1234.");
-        users = { 'admin': '1234' };
-        saveUsers(users);
-      }
-
-      if (users[user] && users[user] === pass) {
-        console.log("Login successful for:", user);
-        sessionStorage.setItem('spinQ_isLoggedIn', 'true');
-        sessionStorage.setItem('spinQ_currentUser', user);
-        checkLogin();
-
-        // Clear inputs
-        userInput.value = '';
-        passInput.value = '';
-        document.getElementById('loginError').style.display = 'none';
-      } else {
-        console.warn("Login failed for:", user);
-        const err = document.getElementById('loginError');
-        err.style.display = 'block';
-        err.textContent = "Invalid User ID or Password";
-      }
-    }
-
-    function handleSignup() {
-      const user = document.getElementById('signupUser').value.trim();
-      const pass = document.getElementById('signupPass').value.trim();
-
-      if (!user || !pass) return alert("Please enter both User ID and Password");
-
-      const users = getUsers();
-      if (users[user]) return alert("User ID already exists");
-
-      users[user] = pass;
-      saveUsers(users);
-      alert("Account created! Please login.");
-      toggleSignup(); // Back to login
-    }
-
-    function toggleSignup() {
-      const login = document.getElementById('loginView');
-      const signup = document.getElementById('signupView');
-      if (login.style.display === 'none') {
-        login.style.display = 'flex';
-        signup.style.display = 'none';
-      } else {
-        login.style.display = 'none';
-        signup.style.display = 'flex';
-      }
-      // Clear inputs
-      document.querySelectorAll('.form-input').forEach(i => i.value = '');
-      document.getElementById('loginError').style.display = 'none';
-    }
-
-    function logout() {
-      sessionStorage.removeItem('spinQ_isLoggedIn');
-      checkLogin();
-    }
 
     // Configuration
     function openConfig() {
@@ -2635,6 +2524,7 @@
       try {
         loadProductConfigs(); // Load saved targets & card ranges
         loadOperatorHistory(); // Load operator defaults
+        populateMainDropdowns(); // Populate dropdowns immediately since login is removed
 
         // Attach button listeners
         const calcBtn = document.getElementById('calcBtn');
