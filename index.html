@@ -1288,139 +1288,64 @@
       <h2>Saved Tests (Summary by Product Averages)</h2>
 
       <div class="filter-section">
-        <div class="filter-tabs">
-          <div class="filter-tab active" onclick="switchFilterTab('date')">Filter by Date</div>
-          <div class="filter-tab" onclick="switchFilterTab('cards')">Filter by Cards</div>
-          <div class="filter-tab" onclick="switchFilterTab('combined')">Combined Filters</div>
-          <div class="filter-tab" onclick="clearFilters()"
-            style="margin-left: auto; background: #e74c3c; color: white; border-color: #e74c3c;">Clear Filters</div>
-        </div>
+        <h3 style="margin: 0 0 15px; color: #1e293b; font-size: 16px;">Search & Filter Reports</h3>
+        <div
+          style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
 
-        <div id="filterDate" class="filter-content active">
-          <div class="filter-row">
-            <span class="filter-label">Date Range:</span>
-            <select id="dateRangeType" class="filter-input" onchange="onDateRangeTypeChange(); applyFilters();"
-              style="min-width: 120px;">
-              <option value="">Select Date Range</option>
+          <div style="flex: 1; min-width: 150px;">
+            <label class="filter-label" style="display:block; margin-bottom:5px;">Date Range</label>
+            <select id="srchDateRange" class="filter-input" onchange="onSrchDateRangeChange(); applySrchFilters();"
+              style="width:100%;">
+              <option value="all">All Dates</option>
               <option value="today">Today</option>
               <option value="week">This Week</option>
               <option value="month">This Month</option>
-              <option value="custom">Custom Range</option>
+              <option value="custom">Custom Range...</option>
             </select>
           </div>
-          <div id="customDateRange" class="filter-row" style="display: none;">
-            <span class="filter-label">From:</span>
-            <input type="date" id="filterDateFrom" class="filter-input" onchange="applyFilters()">
-            <span class="filter-label">To:</span>
-            <input type="date" id="filterDateTo" class="filter-input" onchange="applyFilters()">
-          </div>
-          <div class="filter-row">
-            <span class="filter-label">Operator:</span>
-            <select id="filterOperator" class="filter-input" onchange="applyFilters()" style="min-width: 150px;">
-              <option value="">All Operators</option>
-            </select>
-          </div>
-          <div class="filter-row">
-            <span class="filter-label">Products:</span>
-            <div class="card-selector" id="filterProductSelector">
-              <!-- Products will be populated dynamically -->
-            </div>
-          </div>
-          <div class="filter-row">
-            <button class="btn-start" onclick="selectAllProducts('filterProductSelector')"
-              style="padding: 6px 12px; font-size: 13px;">Select All</button>
-            <button class="btn-muted" onclick="deselectAllProducts('filterProductSelector')"
-              style="padding: 6px 12px; font-size: 13px;">Deselect All</button>
-          </div>
-          <div class="filter-buttons">
-            <button class="btn-start" onclick="applyFilters()" style="padding: 8px 16px; font-size: 14px;">Apply Date
-              Filter</button>
-            <button class="btn-print" onclick="viewFilteredResults()" id="viewFilteredBtn"
-              style="padding: 8px 16px; font-size: 14px; display: none;">View Filtered Charts</button>
-          </div>
-        </div>
 
-        <div id="filterCards" class="filter-content">
-          <div class="filter-row">
-            <span class="filter-label">Card Numbers:</span>
-            <div class="card-selector" id="cardSelector">
-              <!-- Cards will be populated dynamically -->
+          <div id="srchCustomDates" style="display: none; flex: 2; min-width: 250px; gap: 10px;">
+            <div style="flex:1;">
+              <label class="filter-label" style="display:block; margin-bottom:5px;">From</label>
+              <input type="date" id="srchDateFrom" class="filter-input" onchange="applySrchFilters()"
+                style="width:100%;">
+            </div>
+            <div style="flex:1;">
+              <label class="filter-label" style="display:block; margin-bottom:5px;">To</label>
+              <input type="date" id="srchDateTo" class="filter-input" onchange="applySrchFilters()" style="width:100%;">
             </div>
           </div>
-          <div class="filter-row">
-            <button class="btn-start" onclick="selectAllCards()" style="padding: 6px 12px; font-size: 13px;">Select
-              All</button>
-            <button class="btn-muted" onclick="deselectAllCards()" style="padding: 6px 12px; font-size: 13px;">Deselect
-              All</button>
-          </div>
-          <div class="filter-row">
-            <span class="filter-label">Products:</span>
-            <div class="card-selector" id="cardProductSelector">
-              <!-- Products will be populated dynamically -->
-            </div>
-          </div>
-          <div class="filter-row">
-            <button class="btn-start" onclick="selectAllProducts('cardProductSelector')"
-              style="padding: 6px 12px; font-size: 13px;">Select All</button>
-            <button class="btn-muted" onclick="deselectAllProducts('cardProductSelector')"
-              style="padding: 6px 12px; font-size: 13px;">Deselect All</button>
-          </div>
-          <div class="filter-buttons">
-            <button class="btn-start" onclick="applyFilters()" style="padding: 8px 16px; font-size: 14px;">Apply Card
-              Filter</button>
-            <button class="btn-print" onclick="viewFilteredResults()" id="viewFilteredCardsBtn"
-              style="padding: 8px 16px; font-size: 14px; display: none;">View Filtered Charts</button>
-          </div>
-        </div>
 
-        <div id="filterCombined" class="filter-content">
-          <div class="filter-row">
-            <span class="filter-label">Date Range:</span>
-            <select id="combinedDateRangeType" class="filter-input"
-              onchange="onCombinedDateRangeTypeChange(); applyFilters();" style="min-width: 120px;">
-              <option value="">Select Date Range</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="custom">Custom Range</option>
+          <div style="flex: 1; min-width: 130px;">
+            <label class="filter-label" style="display:block; margin-bottom:5px;">Machine</label>
+            <select id="srchMachine" class="filter-input" onchange="applySrchFilters()" style="width:100%;">
+              <option value="">All</option>
             </select>
           </div>
-          <div id="combinedCustomDateRange" class="filter-row" style="display: none;">
-            <span class="filter-label">From:</span>
-            <input type="date" id="combinedDateFrom" class="filter-input" onchange="applyFilters()">
-            <span class="filter-label">To:</span>
-            <input type="date" id="combinedDateTo" class="filter-input" onchange="applyFilters()">
-          </div>
-          <div class="filter-row">
-            <span class="filter-label">Operator:</span>
-            <select id="combinedOperator" class="filter-input" onchange="applyFilters()" style="min-width: 150px;">
-              <option value="">All Operators</option>
+
+          <div style="flex: 1; min-width: 130px;">
+            <label class="filter-label" style="display:block; margin-bottom:5px;">Lot</label>
+            <select id="srchLot" class="filter-input" onchange="applySrchFilters()" style="width:100%;">
+              <option value="">All</option>
             </select>
           </div>
-          <div class="filter-row">
-            <span class="filter-label">Card Numbers:</span>
-            <div class="card-selector" id="combinedCardSelector" style="max-height: 120px;">
-              <!-- Cards will be populated dynamically -->
-            </div>
+
+          <div style="flex: 1; min-width: 130px;">
+            <label class="filter-label" style="display:block; margin-bottom:5px;">Product</label>
+            <select id="srchProduct" class="filter-input" onchange="applySrchFilters()" style="width:100%;">
+              <option value="">All</option>
+            </select>
           </div>
-          <div class="filter-row">
-            <span class="filter-label">Products:</span>
-            <div class="card-selector" id="combinedProductSelector">
-              <!-- Products will be populated dynamically -->
-            </div>
+
+          <div style="flex: 1; min-width: 130px;">
+            <label class="filter-label" style="display:block; margin-bottom:5px;">Process</label>
+            <select id="srchProcess" class="filter-input" onchange="applySrchFilters()" style="width:100%;">
+              <option value="">All</option>
+            </select>
           </div>
-          <div class="filter-row">
-            <button class="btn-start" onclick="selectAllProducts('combinedProductSelector')"
-              style="padding: 6px 12px; font-size: 13px;">Select All</button>
-            <button class="btn-muted" onclick="deselectAllProducts('combinedProductSelector')"
-              style="padding: 6px 12px; font-size: 13px;">Deselect All</button>
-          </div>
-          <div class="filter-buttons">
-            <button class="btn-start" onclick="applyFilters()" style="padding: 8px 16px; font-size: 14px;">Apply
-              Combined Filter</button>
-            <button class="btn-print" onclick="viewFilteredResults()" id="viewFilteredCombinedBtn"
-              style="padding: 8px 16px; font-size: 14px; display: none;">View Filtered Charts</button>
-          </div>
+
+          <button class="btn-muted" onclick="clearSrchFilters()" style="padding: 10px 15px; height: 38px;">Clear
+            All</button>
         </div>
       </div>
 
@@ -1477,20 +1402,23 @@
       <table id="savedTable">
         <thead>
           <tr>
-            <th><input type="checkbox" onchange="toggleSelectAll(this)"></th>
-            <th>Date Time</th>
-            <th>Report #</th>
-            <th>Machine</th>
-            <th>Product</th>
-            <th>Process</th>
-            <th>Lot</th>
+            <th style="width:30px;"><input type="checkbox" onchange="toggleSelectAll(this)"></th>
+            <th onclick="sortSavedTests('dateTime')" style="cursor:pointer;">Date Time <span id="sort-dateTime"></span>
+            </th>
+            <th onclick="sortSavedTests('reportNumber')" style="cursor:pointer;">Report # <span
+                id="sort-reportNumber"></span></th>
+            <th onclick="sortSavedTests('machine')" style="cursor:pointer;">Machine <span id="sort-machine"></span></th>
+            <th onclick="sortSavedTests('product')" style="cursor:pointer;">Product <span id="sort-product"></span></th>
+            <th onclick="sortSavedTests('process')" style="cursor:pointer;">Process <span id="sort-process"></span></th>
+            <th onclick="sortSavedTests('lotNumber')" style="cursor:pointer;">Lot <span id="sort-lotNumber"></span></th>
             <th>Count</th>
             <th>Avg count</th>
             <th>Count CV%</th>
             <th>Avg Strength</th>
-            <th>CSP</th>
+            <th>Avg CSP</th>
             <th>Out of limit</th>
-            <th>No. Samples</th>
+            <th onclick="sortSavedTests('sampleCount')" style="cursor:pointer;">No. Samples <span
+                id="sort-sampleCount"></span></th>
             <th>Details</th>
           </tr>
         </thead>
@@ -2542,16 +2470,13 @@
     }
 
     function getSelectedSavedIndices() {
-      const checkboxes = document.querySelectorAll('#savedList input[type="checkbox"]');
-      const saved = getSavedTests();
-      const testsToDisplay = (typeof filteredTests !== 'undefined' && filteredTests.length > 0) ? filteredTests : saved;
+      const checkboxes = document.querySelectorAll('#savedList input[type="checkbox"]:checked');
       const selected = [];
-      checkboxes.forEach((cb, rowIndex) => {
-        if (!cb.checked) return;
-        const test = testsToDisplay.slice().reverse()[rowIndex];
-        if (test) {
-          const originalIndex = saved.indexOf(test);
-          if (originalIndex >= 0) selected.push(originalIndex);
+      checkboxes.forEach(cb => {
+        const row = cb.closest('tr');
+        if (row && row.hasAttribute('data-original-index')) {
+          const idx = parseInt(row.getAttribute('data-original-index'), 10);
+          if (!isNaN(idx)) selected.push(idx);
         }
       });
       return selected;
@@ -4102,473 +4027,196 @@
 
 
     // -----------------------------
-    // Filtering functionality
+    // Filtering & Sorting functionality
     // -----------------------------
+
+    let currentSort = { column: 'dateTime', direction: 'desc' };
     let filteredTests = [];
-    const filteredChartInstances = new Map();
 
-    function switchFilterTab(tab) {
-      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.filter-content').forEach(c => c.classList.remove('active'));
-
-      if (tab === 'date') {
-        document.querySelectorAll('.filter-tab')[0].classList.add('active');
-        document.getElementById('filterDate').classList.add('active');
-      } else if (tab === 'cards') {
-        document.querySelectorAll('.filter-tab')[1].classList.add('active');
-        document.getElementById('filterCards').classList.add('active');
-      } else if (tab === 'combined') {
-        document.querySelectorAll('.filter-tab')[2].classList.add('active');
-        document.getElementById('filterCombined').classList.add('active');
-      }
+    function onSrchDateRangeChange() {
+      const type = document.getElementById('srchDateRange').value;
+      document.getElementById('srchCustomDates').style.display = type === 'custom' ? 'flex' : 'none';
     }
 
-    function onDateRangeTypeChange() {
-      const type = document.getElementById('dateRangeType').value;
-      document.getElementById('customDateRange').style.display = type === 'custom' ? 'flex' : 'none';
+    function clearSrchFilters() {
+      document.getElementById('srchDateRange').value = 'all';
+      document.getElementById('srchDateFrom').value = '';
+      document.getElementById('srchDateTo').value = '';
+      document.getElementById('srchMachine').value = '';
+      document.getElementById('srchLot').value = '';
+      document.getElementById('srchProduct').value = '';
+      document.getElementById('srchProcess').value = '';
+      onSrchDateRangeChange();
+      applySrchFilters();
     }
 
-    function onCombinedDateRangeTypeChange() {
-      const type = document.getElementById('combinedDateRangeType').value;
-      document.getElementById('combinedCustomDateRange').style.display = type === 'custom' ? 'flex' : 'none';
-    }
-
-    function getDateRange(type) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      if (type === 'today') {
-        return { from: new Date(today), to: new Date(today) };
-      } else if (type === 'week') {
-        const from = new Date(today);
-        from.setDate(today.getDate() - today.getDay());
-        const to = new Date(from);
-        to.setDate(from.getDate() + 6);
-        return { from, to };
-      } else if (type === 'month') {
-        const from = new Date(today.getFullYear(), today.getMonth(), 1);
-        const to = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        return { from, to };
-      }
-      return null;
-    }
-
-    function getSelectedCards(selectorId) {
-      const checkboxes = document.querySelectorAll(`#${selectorId} input[type="checkbox"]:checked`);
-      return Array.from(checkboxes).map(cb => parseInt(cb.value));
-    }
-
-    function getSelectedProducts(selectorId) {
-      const checkboxes = document.querySelectorAll(`#${selectorId} input[type="checkbox"]:checked`);
-      return Array.from(checkboxes).map(cb => cb.value);
-    }
-
-    function selectAllProducts(selectorId) {
-      document.querySelectorAll(`#${selectorId} input[type="checkbox"]`).forEach(cb => cb.checked = true);
-      applyFilters();
-    }
-
-    function deselectAllProducts(selectorId) {
-      document.querySelectorAll(`#${selectorId} input[type="checkbox"]`).forEach(cb => cb.checked = false);
-      applyFilters();
-    }
-
-    function applyFilters() {
+    function populateSrchDropdowns() {
       const saved = getSavedTests();
-      let filtered = [...saved];
+      const fields = {
+        srchMachine: 'machine',
+        srchLot: 'lotNumber',
+        srchProduct: 'product',
+        srchProcess: 'process'
+      };
 
-      // Get active tab
-      const activeTab = document.querySelector('.filter-tab.active');
-      const tabIndex = Array.from(document.querySelectorAll('.filter-tab')).indexOf(activeTab);
-
-      if (tabIndex === 0 || tabIndex === 2) {
-        // Date filter
-        const dateRangeType = tabIndex === 0
-          ? document.getElementById('dateRangeType').value
-          : document.getElementById('combinedDateRangeType').value;
-
-        let dateFrom, dateTo;
-        if (dateRangeType === 'custom') {
-          const fromInput = tabIndex === 0 ? document.getElementById('filterDateFrom') : document.getElementById('combinedDateFrom');
-          const toInput = tabIndex === 0 ? document.getElementById('filterDateTo') : document.getElementById('combinedDateTo');
-          if (fromInput.value) dateFrom = new Date(fromInput.value + 'T00:00:00');
-          if (toInput.value) {
-            dateTo = new Date(toInput.value + 'T23:59:59.999');
-          }
-        } else {
-          const range = getDateRange(dateRangeType);
-          if (range) {
-            dateFrom = range.from;
-            dateTo = range.to;
-            dateTo.setHours(23, 59, 59, 999);
-          }
-        }
-
-        if (dateFrom || dateTo) {
-          filtered = filtered.filter(test => {
-            if (!test.testDate) return false;
-            // Handle different date formats
-            let testDateStr = test.testDate;
-            if (testDateStr.includes('T')) {
-              testDateStr = testDateStr.split('T')[0]; // Get date part only (YYYY-MM-DD)
-            }
-            const testDate = new Date(testDateStr + 'T00:00:00');
-            if (isNaN(testDate.getTime())) return false; // Invalid date
-
-            if (dateFrom) {
-              const fromDate = new Date(dateFrom);
-              fromDate.setHours(0, 0, 0, 0);
-              if (testDate < fromDate) return false;
-            }
-            if (dateTo) {
-              const toDate = new Date(dateTo);
-              toDate.setHours(23, 59, 59, 999);
-              if (testDate > toDate) return false;
-            }
-            return true;
-          });
-        }
-
-        // Operator filter
-        const operator = tabIndex === 0
-          ? document.getElementById('filterOperator').value
-          : document.getElementById('combinedOperator').value;
-        if (operator) {
-          filtered = filtered.filter(test => test.operatorName === operator);
-        }
+      for (const [id, field] of Object.entries(fields)) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const current = el.value;
+        const uniques = [...new Set(saved.map(t => t[field] || t.metrics?.[field]).filter(Boolean))].sort();
+        el.innerHTML = '<option value="">All</option>' +
+          uniques.map(u => `<option value="${u}">${u}</option>`).join('');
+        if (uniques.includes(current)) el.value = current;
       }
+    }
 
-      if (tabIndex === 1 || tabIndex === 2) {
-        // Card filter
-        const selectorId = tabIndex === 1 ? 'cardSelector' : 'combinedCardSelector';
-        const selectedCards = getSelectedCards(selectorId);
-        if (selectedCards.length > 0) {
-          filtered = filtered.map(test => {
-            const filteredCardRows = (test.cardRows || []).filter(r => selectedCards.includes(r.cardNo));
-            if (filteredCardRows.length === 0) return null;
-            return { ...test, cardRows: filteredCardRows };
-          }).filter(Boolean);
-        }
-      }
+    function applySrchFilters() {
+      const saved = getSavedTests();
+      const dateType = document.getElementById('srchDateRange').value;
+      const machine = document.getElementById('srchMachine').value;
+      const lot = document.getElementById('srchLot').value;
+      const product = document.getElementById('srchProduct').value;
+      const process = document.getElementById('srchProcess').value;
 
-      // Product filter (applies to all tabs)
-      let productSelectorId;
-      if (tabIndex === 0) {
-        productSelectorId = 'filterProductSelector';
-      } else if (tabIndex === 1) {
-        productSelectorId = 'cardProductSelector';
-      } else {
-        productSelectorId = 'combinedProductSelector';
-      }
-      const selectedProducts = getSelectedProducts(productSelectorId);
-      const hasCustomProductSelected = selectedProducts.includes('__CUSTOM_PRODUCT__');
-      const regularSelectedProducts = selectedProducts.filter(p => p !== '__CUSTOM_PRODUCT__');
-
-      if (selectedProducts.length > 0) {
-        filtered = filtered.filter(test => {
-          // Get products from test
-          const testGroups = groupData(test.cardRows || []);
-          const testProducts = Object.keys(testGroups).filter(p => testGroups[p].allValues.length > 0);
-
-          let matchesCustom = false;
-          let matchesRegular = false;
-
-          // Check if test matches custom product filter
-          if (hasCustomProductSelected) {
-            // Check if test has any products that are NOT in the standard product list
-            matchesCustom = testProducts.some(p => !PRODUCT_OPTIONS_BASE.includes(p));
-          }
-
-          // Check if test matches regular product filter
-          if (regularSelectedProducts.length > 0) {
-            matchesRegular = testProducts.some(p => regularSelectedProducts.includes(p));
-          }
-
-          // Return true if either custom or regular products match
-          if (hasCustomProductSelected && regularSelectedProducts.length > 0) {
-            return matchesCustom || matchesRegular;
-          } else if (hasCustomProductSelected) {
-            return matchesCustom;
+      filteredTests = saved.filter(test => {
+        // Date Logic
+        if (dateType !== 'all') {
+          let dateFrom, dateTo;
+          if (dateType === 'custom') {
+            const from = document.getElementById('srchDateFrom').value;
+            const to = document.getElementById('srchDateTo').value;
+            if (from) dateFrom = new Date(from + 'T00:00:00');
+            if (to) dateTo = new Date(to + 'T23:59:59');
           } else {
-            return matchesRegular;
+            const range = getDateRange(dateType);
+            if (range) { dateFrom = range.from; dateTo = range.to; dateTo.setHours(23, 59, 59); }
           }
-        });
-      }
-
-      // Determine if any filters were actually applied
-      let filtersApplied = false;
-
-      if (tabIndex === 0 || tabIndex === 2) {
-        // Check date filter
-        const dateRangeType = tabIndex === 0
-          ? document.getElementById('dateRangeType').value
-          : document.getElementById('combinedDateRangeType').value;
-        if (dateRangeType && dateRangeType !== '') {
-          filtersApplied = true;
+          const tDate = new Date((test.dateTime || test.testDate || '').split(',')[0]);
+          if (dateFrom && tDate < dateFrom) return false;
+          if (dateTo && tDate > dateTo) return false;
         }
-        // Check operator filter
-        const operator = tabIndex === 0
-          ? document.getElementById('filterOperator').value
-          : document.getElementById('combinedOperator').value;
-        if (operator && operator !== '') {
-          filtersApplied = true;
-        }
-      }
 
-      if (tabIndex === 1 || tabIndex === 2) {
-        // Check card filter
-        const selectorId = tabIndex === 1 ? 'cardSelector' : 'combinedCardSelector';
-        const selectedCards = getSelectedCards(selectorId);
-        if (selectedCards.length > 0) {
-          filtersApplied = true;
-        }
-      }
+        // Field Logic
+        const tMachine = test.machine || test.machineId || '-';
+        const tLot = test.lotNumber || '-';
+        const tProd = test.product || '-';
+        const tProc = test.process || '-';
 
-      // Check product filter
-      if (selectedProducts.length > 0) {
-        filtersApplied = true;
-      }
+        if (machine && tMachine !== machine) return false;
+        if (lot && tLot !== lot) return false;
+        if (product && tProd !== product) return false;
+        if (process && tProc !== process) return false;
 
-      // Update filteredTests only if filters are actually applied
-      filteredTests = filtersApplied ? filtered : [];
+        return true;
+      });
 
-      // Update table display
-      const tbody = document.getElementById('savedList');
-      if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8">No tests match the filter criteria.</td></tr>';
+      renderSavedTests();
+    }
+
+    function sortSavedTests(column) {
+      if (currentSort.column === column) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
       } else {
-        tbody.innerHTML = '';
-        const displayTests = filteredTests.length > 0 ? filteredTests : saved;
-        displayTests.slice().reverse().forEach((test, revIndex) => {
-          const originalIndex = saved.indexOf(test);
-          const revOriginalIndex = saved.length - 1 - originalIndex;
-          const summary = formatProductSummary(test.summaryByProduct);
-          const targetsText = formatTargets(test.targets);
+        currentSort.column = column;
+        currentSort.direction = 'asc';
+      }
+      renderSavedTests();
+    }
 
-          const tr = document.createElement('tr');
+    function updateSortIcons() {
+      const cols = ['dateTime', 'reportNumber', 'machine', 'product', 'process', 'lotNumber', 'sampleCount'];
+      cols.forEach(c => {
+        const el = document.getElementById(`sort-${c}`);
+        if (!el) return;
+        if (currentSort.column === c) {
+          el.innerHTML = currentSort.direction === 'asc' ? ' ▲' : ' ▼';
+          el.style.color = '#3498db';
+        } else {
+          el.innerHTML = '';
+        }
+      });
+    }
+
+    function renderSavedTests() {
+      const saved = getSavedTests();
+      const list = document.getElementById('savedList');
+      if (!list) return;
+
+      // Populate dropdowns only if not already filtered to avoid feedback loop
+      populateSrchDropdowns();
+
+      let displayData = [...(filteredTests.length > 0 ? filteredTests : saved)];
+
+      // Sorting Logic
+      displayData.sort((a, b) => {
+        let valA = a[currentSort.column] || (a.metrics ? a.metrics[currentSort.column] : '') || '';
+        let valB = b[currentSort.column] || (b.metrics ? b.metrics[currentSort.column] : '') || '';
+
+        // Special handling for reportNumber or date
+        if (currentSort.column === 'dateTime') {
+          return currentSort.direction === 'asc'
+            ? new Date(valA.split(',')[0]) - new Date(valB.split(',')[0])
+            : new Date(valB.split(',')[0]) - new Date(valA.split(',')[0]);
+        }
+
+        if (isFinite(valA) && isFinite(valB)) {
+          return currentSort.direction === 'asc' ? valA - valB : valB - valA;
+        }
+
+        return currentSort.direction === 'asc'
+          ? String(valA).localeCompare(String(valB))
+          : String(valB).localeCompare(String(valA));
+      });
+
+      list.innerHTML = '';
+      updateSortIcons();
+
+      displayData.forEach((test, idx) => {
+        const originalIndex = saved.indexOf(test);
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-lot', test.lotNumber || 'Unknown');
+        tr.setAttribute('data-original-index', originalIndex);
+
+        if (test.testType === 'Count & Strength') {
           tr.innerHTML = `
-          <td><input type="checkbox" onchange="onSavedSelectionChanged()"></td>
-          <td>${escapeHtml(test.dateTime || 'N/A')}</td>
-          <td>${escapeHtml(test.reportNumber || 'N/A')}</td>
-          <td>${escapeHtml(test.testDate || 'N/A')}</td>
-          <td>${escapeHtml(test.operatorName || 'N/A')}</td>
-          <td style="text-align:left;">${escapeHtml(targetsText)}</td>
-          <td style="text-align:left;">${escapeHtml(summary)}</td>
-          <td><button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${revOriginalIndex})">View Details</button></td>
-        `;
-          tbody.appendChild(tr);
-        });
-      }
+            <td><input type="checkbox" onchange="onSavedSelectionChanged(this)"></td>
+            <td>${escapeHtml(test.dateTime || 'N/A')}</td>
+            <td>${escapeHtml(test.reportNumber || 'N/A')}</td>
+            <td>${escapeHtml(test.machine || test.machineId || 'N/A')}</td>
+            <td>${escapeHtml(test.product || 'N/A')}</td>
+            <td>${escapeHtml(test.process || 'N/A')}</td>
+            <td>${escapeHtml(test.lotNumber || 'N/A')}</td>
+            <td>${escapeHtml(test.yarnCount || test.targetCount || '-')}</td>
+            <td>${escapeHtml(test.avgCount || test.metrics?.avgCount || '-')}</td>
+            <td>${escapeHtml(test.countCV || test.metrics?.countCV || '-')}</td>
+            <td>${escapeHtml(test.avgStrength || test.metrics?.avgStrength || '-')}</td>
+            <td>${escapeHtml(test.avgCSP || test.metrics?.avgCSP || '-')}</td>
+            <td>${escapeHtml(test.outOfLimitCount || '0.0')}%</td>
+            <td><strong>${(test.rows || []).length}</strong></td>
+            <td><button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${originalIndex})">View Details</button></td>
+          `;
+        } else {
+          // Sliver fallback or legacy sliver
+          const summary = formatProductSummary(test.summaryByProduct);
+          const targetsText = (typeof formatTargets === 'function') ? formatTargets(test.targets) : (test.yarnCount || test.targetCount || '-');
+          const sliverSamples = test.cardRows ? test.cardRows.length : (test.samples ? (test.samples.length || 0) : 0);
 
-      // Show view button if filters applied and results exist
-      if (filteredTests.length > 0) {
-        const viewBtn = tabIndex === 0 ? 'viewFilteredBtn' : (tabIndex === 1 ? 'viewFilteredCardsBtn' : 'viewFilteredCombinedBtn');
-        document.getElementById(viewBtn).style.display = 'inline-block';
-      } else {
-        document.getElementById('viewFilteredBtn').style.display = 'none';
-        document.getElementById('viewFilteredCardsBtn').style.display = 'none';
-        document.getElementById('viewFilteredCombinedBtn').style.display = 'none';
-      }
-    }
-
-    function clearFilters() {
-      document.getElementById('dateRangeType').value = '';
-      document.getElementById('filterDateFrom').value = '';
-      document.getElementById('filterDateTo').value = '';
-      document.getElementById('filterOperator').value = '';
-      document.getElementById('combinedDateRangeType').value = '';
-      document.getElementById('combinedDateFrom').value = '';
-      document.getElementById('combinedDateTo').value = '';
-      document.getElementById('combinedOperator').value = '';
-
-      document.querySelectorAll('#cardSelector input[type="checkbox"], #combinedCardSelector input[type="checkbox"]').forEach(cb => cb.checked = false);
-      document.querySelectorAll('#filterProductSelector input[type="checkbox"], #cardProductSelector input[type="checkbox"], #combinedProductSelector input[type="checkbox"]').forEach(cb => cb.checked = false);
-
-      document.getElementById('customDateRange').style.display = 'none';
-      document.getElementById('combinedCustomDateRange').style.display = 'none';
-
-      filteredTests = [];
-      document.getElementById('filteredResultsPanel').style.display = 'none';
-      document.getElementById('viewFilteredBtn').style.display = 'none';
-      document.getElementById('viewFilteredCardsBtn').style.display = 'none';
-      document.getElementById('viewFilteredCombinedBtn').style.display = 'none';
-
-      loadSavedTests();
-    }
-
-    function selectAllCards() {
-      const activeTab = document.querySelector('.filter-tab.active');
-      const tabIndex = Array.from(document.querySelectorAll('.filter-tab')).indexOf(activeTab);
-      const selectorId = tabIndex === 1 ? 'cardSelector' : 'combinedCardSelector';
-      document.querySelectorAll(`#${selectorId} input[type="checkbox"]`).forEach(cb => cb.checked = true);
-    }
-
-    function deselectAllCards() {
-      const activeTab = document.querySelector('.filter-tab.active');
-      const tabIndex = Array.from(document.querySelectorAll('.filter-tab')).indexOf(activeTab);
-      const selectorId = tabIndex === 1 ? 'cardSelector' : 'combinedCardSelector';
-      document.querySelectorAll(`#${selectorId} input[type="checkbox"]`).forEach(cb => cb.checked = false);
-    }
-
-    function viewFilteredResults() {
-      if (filteredTests.length === 0) {
-        alert('No filtered tests to display.');
-        return;
-      }
-
-      // Get selected products from the active filter tab
-      const activeTab = document.querySelector('.filter-tab.active');
-      const tabIndex = Array.from(document.querySelectorAll('.filter-tab')).indexOf(activeTab);
-      let productSelectorId;
-      if (tabIndex === 0) {
-        productSelectorId = 'filterProductSelector';
-      } else if (tabIndex === 1) {
-        productSelectorId = 'cardProductSelector';
-      } else {
-        productSelectorId = 'combinedProductSelector';
-      }
-      let selectedProducts = getSelectedProducts(productSelectorId);
-
-      // Handle "Custom Product" selection - replace __CUSTOM_PRODUCT__ with actual custom product names
-      if (selectedProducts.includes('__CUSTOM_PRODUCT__')) {
-        const customProducts = new Set();
-        for (const test of filteredTests) {
-          const groups = groupData(test.cardRows || []);
-          Object.keys(groups).forEach(p => {
-            if (!PRODUCT_OPTIONS_BASE.includes(p)) {
-              customProducts.add(p);
-            }
-          });
+          tr.innerHTML = `
+            <td><input type="checkbox" onchange="onSavedSelectionChanged(this)"></td>
+            <td>${escapeHtml(test.dateTime || 'N/A')}</td>
+            <td>${escapeHtml(test.reportNumber || 'N/A')}</td>
+            <td colspan="4" style="text-align:left; font-size:11px; color:#666;">Sliver/Carding: ${escapeHtml(summary)}</td>
+            <td>${escapeHtml(targetsText)}</td>
+            <td colspan="5">-</td>
+            <td><strong>${sliverSamples}</strong></td>
+            <td><button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${originalIndex})">View Details</button></td>
+          `;
         }
-        selectedProducts = selectedProducts.filter(p => p !== '__CUSTOM_PRODUCT__');
-        selectedProducts.push(...Array.from(customProducts));
-      }
+        list.appendChild(tr);
+      });
 
-      // Group data by product across all filtered tests (never combine different products)
-      const combinedGroups = {};
-      const allTargets = {};
-      const allRanges = {};
-
-      for (const test of filteredTests) {
-        const groups = groupData(test.cardRows || []);
-        for (const p of Object.keys(groups)) {
-          // If products are selected, only include selected products
-          if (selectedProducts.length > 0 && !selectedProducts.includes(p)) {
-            continue;
-          }
-          if (!combinedGroups[p]) {
-            combinedGroups[p] = { cardAvgs: [], allValues: [], cardNos: [] };
-            allTargets[p] = test.targets && test.targets[p] ? test.targets[p] : null;
-            // Use per-product ranges if available, otherwise fallback to single range
-            if (test.acceptableRanges && test.acceptableRanges[p]) {
-              allRanges[p] = test.acceptableRanges[p];
-            } else if (test.acceptableRange !== undefined && test.acceptableRange !== null) {
-              allRanges[p] = test.acceptableRange;
-            } else {
-              allRanges[p] = 5.0;
-            }
-          }
-          combinedGroups[p].cardAvgs.push(...groups[p].cardAvgs);
-          combinedGroups[p].allValues.push(...groups[p].allValues);
-          combinedGroups[p].cardNos.push(...groups[p].cardNos);
-        }
-      }
-
-      const productsPresent = Object.keys(combinedGroups)
-        .filter(p => combinedGroups[p].allValues.length > 0)
-        .sort((a, b) => a.localeCompare(b));
-
-      if (productsPresent.length === 0) {
-        alert('No data to display after filtering.');
-        return;
-      }
-
-      // Calculate metrics for filtered results - per product (only selected products)
-      const productMetrics = {};
-      for (const test of filteredTests) {
-        const testGroups = groupData(test.cardRows || []);
-        const testRanges = test.acceptableRanges || (test.acceptableRange !== undefined && test.acceptableRange !== null
-          ? Object.fromEntries(Object.keys(testGroups).map(p => [p, test.acceptableRange]))
-          : Object.fromEntries(Object.keys(testGroups).map(p => [p, 5.0])));
-
-        for (const p of Object.keys(testGroups)) {
-          // If products are selected, only include selected products
-          if (selectedProducts.length > 0 && !selectedProducts.includes(p)) {
-            continue;
-          }
-          if (!productMetrics[p]) {
-            productMetrics[p] = { totalCards: 0, totalCoilers: 0, oocCards: 0, oocCoilers: 0, range: testRanges[p] || 5.0, cardAvgs: [], allValues: [] };
-          }
-          const g = testGroups[p];
-          productMetrics[p].totalCards += g.cardAvgs.length;
-          productMetrics[p].totalCoilers += g.allValues.length;
-          productMetrics[p].cardAvgs.push(...g.cardAvgs);
-          productMetrics[p].allValues.push(...g.allValues);
-
-          // Calculate OOC for this test's product data
-          const productRange = testRanges[p] || 5.0;
-          const tgt = test.targets && test.targets[p] ? test.targets[p] : null;
-          const meanCard = meanOf(g.cardAvgs);
-          const limCard = tgt ? limitsFromTarget(tgt, productRange) : limitsFromMean(meanCard, productRange);
-          const meanAll = meanOf(g.allValues);
-          const limCoiler = tgt ? limitsFromTarget(tgt, productRange) : limitsFromMean(meanAll, productRange);
-
-          for (const r of test.cardRows || []) {
-            if ((r.product || '').trim() !== p) continue;
-            if (r.avg !== null && isFinite(r.avg) && !withinLimits(Number(r.avg), limCard)) {
-              productMetrics[p].oocCards++;
-            }
-            for (const v of (r.coilers || [])) {
-              if (v !== null && isFinite(v) && !withinLimits(Number(v), limCoiler)) {
-                productMetrics[p].oocCoilers++;
-              }
-            }
-          }
-        }
-      }
-
-      // Display metrics boxes - per product
-      const filteredMetrics = document.getElementById('filteredMetrics');
-      let filteredMetricsHTML = `
-      <div class="metric">
-        <div class="label">Products Detected</div>
-        <div class="value">${escapeHtml(productsPresent.join(', ') || '-')}</div>
-      </div>
-    `;
-
-      for (const p of productsPresent) {
-        const metrics = productMetrics[p] || { totalCards: 0, totalCoilers: 0, oocCards: 0, oocCoilers: 0, range: allRanges[p] || 5.0, cardAvgs: [], allValues: [] };
-        const rangeStr = metrics.range.toFixed(1);
-        const cardsBg = metrics.oocCards > 0 ? '#e74c3c' : '#3498db';
-        const coilersBg = metrics.oocCoilers > 0 ? '#e74c3c' : '#3498db';
-
-        const cardMin = metrics.cardAvgs && metrics.cardAvgs.length > 0 ? Math.min(...metrics.cardAvgs).toFixed(3) : '-';
-        const cardMax = metrics.cardAvgs && metrics.cardAvgs.length > 0 ? Math.max(...metrics.cardAvgs).toFixed(3) : '-';
-        const coilerMin = metrics.allValues && metrics.allValues.length > 0 ? Math.min(...metrics.allValues).toFixed(3) : '-';
-        const coilerMax = metrics.allValues && metrics.allValues.length > 0 ? Math.max(...metrics.allValues).toFixed(3) : '-';
-
-        filteredMetricsHTML += `
-        <div class="metric" style="background: ${cardsBg};">
-          <div class="label">${escapeHtml(p)} - Cards Out-of-Control (Target ±${rangeStr}%)</div>
-          <div class="value">${metrics.oocCards} out of ${metrics.totalCards}</div>
-          <div class="value" style="font-size: 12px; margin-top: 4px; opacity: 0.9;">Min: ${cardMin} | Max: ${cardMax}</div>
-        </div>
-        <div class="metric" style="background: ${coilersBg};">
-          <div class="label">${escapeHtml(p)} - Coiler Readings Out-of-Control (Target ±${rangeStr}%)</div>
-          <div class="value">${metrics.oocCoilers} out of ${metrics.totalCoilers}</div>
-          <div class="value" style="font-size: 12px; margin-top: 4px; opacity: 0.9;">Min: ${coilerMin} | Max: ${coilerMax}</div>
-        </div>
-      `;
-      }
-
-      filteredMetrics.innerHTML = filteredMetricsHTML;
-
-      // Display filtered results panel
-      document.getElementById('filteredResultsPanel').style.display = 'block';
-      document.getElementById('filteredResultsPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-      // Render charts product-wise
-      renderGroupedCharts(combinedGroups, productsPresent, 'filteredChartsGrid', filteredChartInstances, allTargets, allRanges);
+      // Update selection UI
+      onSavedSelectionChanged();
     }
 
     function closeFilteredResults() {
@@ -4581,37 +4229,7 @@
         alert('No filtered tests to print.');
         return;
       }
-
-      // Get selected products from the active filter tab
-      const activeTab = document.querySelector('.filter-tab.active');
-      const tabIndex = Array.from(document.querySelectorAll('.filter-tab')).indexOf(activeTab);
-      let productSelectorId;
-      if (tabIndex === 0) {
-        productSelectorId = 'filterProductSelector';
-      } else if (tabIndex === 1) {
-        productSelectorId = 'cardProductSelector';
-      } else {
-        productSelectorId = 'combinedProductSelector';
-      }
-      let selectedProducts = getSelectedProducts(productSelectorId);
-
-      // Handle "Custom Product" selection - replace __CUSTOM_PRODUCT__ with actual custom product names
-      if (selectedProducts.includes('__CUSTOM_PRODUCT__')) {
-        const customProducts = new Set();
-        for (const test of filteredTests) {
-          const groups = groupData(test.cardRows || []);
-          Object.keys(groups).forEach(p => {
-            if (!PRODUCT_OPTIONS_BASE.includes(p)) {
-              customProducts.add(p);
-            }
-          });
-        }
-        selectedProducts = selectedProducts.filter(p => p !== '__CUSTOM_PRODUCT__');
-        selectedProducts.push(...Array.from(customProducts));
-      }
-
-      // Create a comprehensive print view with charts and sorted table
-      printFromTestsWithTable(filteredTests, `Filtered Results (${filteredTests.length} tests)`, selectedProducts);
+      printFromTestsWithTable(filteredTests, `Filtered Results (${filteredTests.length} tests)`);
     }
 
     function printFromTestsWithTable(tests, modeLabel, selectedProducts = []) {
