@@ -4724,7 +4724,10 @@
     function printCurrent() {
       if (!currentTest) { alert('Please calculate results first.'); return; }
       // Route to appropriate print function based on test type
-      if (currentTest.testType === 'Count & Strength') {
+      console.log('Print Current - Test Type:', currentTest.testType);
+      console.log('Current Test:', currentTest);
+      // Check both testType and presence of rawData (Count & Strength specific)
+      if (currentTest.testType === 'Count & Strength' || currentTest.rawData) {
         printCountStrengthTest(currentTest);
       } else {
         printFromTestsWithTable([currentTest], `Current Test ${currentTest.reportNumber}`);
