@@ -2339,46 +2339,141 @@
 
 
     // -----------------------------
-    // Render Saved Tests
+    // Saved Tests Management
     // -----------------------------
     function getSavedTests() {
       try {
-        return JSON.parse(localStorage.getItem('spinQ_countStrengthTests') || '[]');
-      } catch (e) {
-        console.error("Error reading saved tests:", e);
-        return [];
-      }
+        const stored = localStorage.getItem('spinQ_countStrengthTests');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch (e) { console.error("Error reading saved tests:", e); }
+      return [];
     }
 
     function renderSavedTests() {
-      const tests = getSavedTests();
+      const saved = getSavedTests();
       const tbody = document.getElementById('savedList');
       if (!tbody) return;
 
-      tbody.innerHTML = '';
-      if (tests.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8">No saved tests found.</td></tr>';
+      const testsToDisplay = (typeof filteredTests !== 'undefined' && filteredTests.length > 0) ? filteredTests : saved;
+
+      if (!testsToDisplay.length) {
+        tbody.innerHTML = '<tr><td colspan="14">No saved tests yet.</td></tr>';
+        const deleteBtn = document.getElementById('deleteBtn');
+        const printSelectedBtn = document.getElementById('printSelectedBtn');
+        if (deleteBtn) deleteBtn.style.display = 'none';
+        if (printSelectedBtn) printSelectedBtn.style.display = 'none';
         return;
       }
 
-      // Sort by id descending (newest first)
-      tests.slice().reverse().forEach((test, revIndex) => {
-        const targetsText = test.targetCount ? `Count: ${test.targetCount}` : '-';
-        const productSummary = test.product + (test.metrics ? ` (Avg Count: ${test.metrics.avgCount})` : '');
-
+      tbody.innerHTML = '';
+      testsToDisplay.slice().reverse().forEach((test, revIndex) => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><input type="checkbox" value="${test.id || ''}"></td>
-            <td>${test.dateTime || '-'}</td>
-            <td>${test.reportNumber || '-'}</td>
-            <td>${test.testDate || '-'}</td>
-            <td>${test.operatorName || '-'}</td>
-            <td>${targetsText}</td>
-            <td>${productSummary}</td>
-            <td><button class="btn-muted" style="margin:0; padding:4px 8px;" onclick="viewTestDetails('${test.id}')">View</button></td>
+
+        if (test.testType === 'Count & Strength') {
+          // Schema detection for legacy records
+          const isLegacy = !test.hasOwnProperty('process');
+
+          let machineVal = test.machine || test.machineId || (isLegacy ? (test.testDate || '-') : '-');
+          let productVal = test.product || (isLegacy ? (test.operatorName || '-') : '-');
+          let processVal = test.process || (isLegacy ? (test.targetCount || '-') : '-');
+          let lotVal = test.lotNumber || (isLegacy ? (test.product || '-') + (test.metrics ? ` (${test.metrics.avgCount})` : '') : '-');
+
+          tr.innerHTML = `
+            <td><input type="checkbox" onchange="onSavedSelectionChanged()"></td>
+            <td>${escapeHtml(test.dateTime || 'N/A')}</td>
+            <td>${escapeHtml(test.reportNumber || 'N/A')}</td>
+            <td>${escapeHtml(machineVal)}</td>
+            <td>${escapeHtml(productVal)}</td>
+            <td>${escapeHtml(processVal)}</td>
+            <td>${escapeHtml(lotVal)}</td>
+            <td>${escapeHtml(test.yarnCount || test.targetCount || '-')}</td>
+            <td>${escapeHtml(test.avgCount || test.metrics?.avgCount || '-')}</td>
+            <td>${escapeHtml(test.countCV || test.metrics?.countCV || '-')}</td>
+            <td>${escapeHtml(test.avgStrength || test.metrics?.avgStrength || '-')}</td>
+            <td>${escapeHtml(test.avgCSP || test.metrics?.avgCSP || '-')}</td>
+            <td>${escapeHtml(test.outOfLimitCount || '0.0')}%</td>
+            <td><button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${revIndex})">View Details</button></td>
           `;
+        } else {
+          // Sliver fallback or legacy sliver
+          const isLegacySliver = !test.testType && test.productsPresent;
+          const summary = formatProductSummary(test.summaryByProduct);
+          const targetsText = (typeof formatTargets === 'function') ? formatTargets(test.targets) : (test.yarnCount || test.targetCount || '-');
+
+          tr.innerHTML = `
+            <td><input type="checkbox" onchange="onSavedSelectionChanged()"></td>
+            <td>${escapeHtml(test.dateTime || 'N/A')}</td>
+            <td>${escapeHtml(test.reportNumber || 'N/A')}</td>
+            <td colspan="4" style="text-align:left; font-size:11px; color:#666;">Sliver/Carding: ${escapeHtml(summary)}</td>
+            <td>${escapeHtml(targetsText)}</td>
+            <td colspan="5">-</td>
+            <td><button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${revIndex})">View Details</button></td>
+          `;
+        }
         tbody.appendChild(tr);
       });
+
+      const deleteBtn = document.getElementById('deleteBtn');
+      const printSelectedBtn = document.getElementById('printSelectedBtn');
+      if (deleteBtn) deleteBtn.style.display = 'none';
+      if (printSelectedBtn) printSelectedBtn.style.display = 'none';
+    }
+
+    function viewDetailsByRow(event, revIndex) {
+      event.preventDefault();
+      event.stopPropagation();
+      const saved = getSavedTests();
+      const testsToDisplay = (typeof filteredTests !== 'undefined' && filteredTests.length > 0) ? filteredTests : saved;
+      const test = testsToDisplay.slice().reverse()[revIndex];
+      if (!test) return;
+      openDetails(test);
+    }
+
+    function onSavedSelectionChanged() {
+      const anyChecked = getSelectedSavedIndices().length > 0;
+      const deleteBtn = document.getElementById('deleteBtn');
+      const printSelectedBtn = document.getElementById('printSelectedBtn');
+      if (deleteBtn) deleteBtn.style.display = anyChecked ? 'inline-block' : 'none';
+      if (printSelectedBtn) printSelectedBtn.style.display = anyChecked ? 'inline-block' : 'none';
+    }
+
+    function toggleSelectAll(master) {
+      const checkboxes = document.querySelectorAll('#savedList input[type="checkbox"]');
+      checkboxes.forEach(cb => cb.checked = master.checked);
+      onSavedSelectionChanged();
+    }
+
+    function getSelectedSavedIndices() {
+      const checkboxes = document.querySelectorAll('#savedList input[type="checkbox"]');
+      const saved = getSavedTests();
+      const testsToDisplay = (typeof filteredTests !== 'undefined' && filteredTests.length > 0) ? filteredTests : saved;
+      const selected = [];
+      checkboxes.forEach((cb, rowIndex) => {
+        if (!cb.checked) return;
+        const test = testsToDisplay.slice().reverse()[rowIndex];
+        if (test) {
+          const originalIndex = saved.indexOf(test);
+          if (originalIndex >= 0) selected.push(originalIndex);
+        }
+      });
+      return selected;
+    }
+
+    function deleteSelected() {
+      const selectedIndices = getSelectedSavedIndices();
+      if (selectedIndices.length === 0) return;
+      if (!confirm('Are you sure you want to delete the selected tests?')) return;
+
+      const saved = getSavedTests();
+      const selectedSet = new Set(selectedIndices);
+      const kept = saved.filter((_, idx) => !selectedSet.has(idx));
+
+      localStorage.setItem('spinQ_countStrengthTests', JSON.stringify(kept));
+      renderSavedTests();
+      if (typeof closeDetails === 'function') closeDetails();
     }
 
     function viewTestDetails(id) {
@@ -2486,19 +2581,7 @@
       try { localStorage.setItem('sliverReportCounter', String(value)); } catch (_) { }
     }
 
-    function getSavedTests() {
-      try {
-        // FIXED: Use correct localStorage key for Count & Strength tests
-        const stored = localStorage.getItem('spinQ_countStrengthTests');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) return parsed;
-        }
-      } catch (_) {
-        try { localStorage.removeItem('spinQ_countStrengthTests'); } catch (__) { }
-      }
-      return [];
-    }
+
     function setSavedTests(tests) {
       try {
         localStorage.setItem('spinQ_countStrengthTests', JSON.stringify(tests));
@@ -2748,7 +2831,7 @@
         dateInput.min = minDate.toISOString().split('T')[0];
         dateInput.max = maxDate.toISOString().split('T')[0];
 
-        loadSavedTests();
+        renderSavedTests();
         initializeFilters();
 
         // Check for scale support on page load
@@ -3921,117 +4004,7 @@
 
 
 
-    function formatProductSummary(summaryByProduct) {
-      const keys = Object.keys(summaryByProduct || {});
-      if (!keys.length) return '-';
-      return keys
-        .sort((a, b) => a.localeCompare(b))
-        .map(p => `${p}: ${summaryByProduct[p].meanCardAvg.toFixed(2)} (n=${summaryByProduct[p].cards})`)
-        .join(' | ');
-    }
 
-    function loadSavedTests() {
-      const tbody = document.getElementById('savedList');
-      const saved = getSavedTests();
-      if (!saved.length) {
-        tbody.innerHTML = '<tr><td colspan="8">No saved tests yet.</td></tr>';
-        document.getElementById('deleteBtn').style.display = 'none';
-        document.getElementById('printSelectedBtn').style.display = 'none';
-        return;
-      }
-
-      tbody.innerHTML = '';
-      saved.slice().reverse().forEach((test, revIndex) => {
-        const tr = document.createElement('tr');
-
-        if (test.testType === 'Count & Strength') {
-          tr.innerHTML = `
-            <td><input type="checkbox" onchange="onSavedSelectionChanged()"></td>
-            <td>${escapeHtml(test.dateTime || 'N/A')}</td>
-            <td>${escapeHtml(test.reportNumber || 'N/A')}</td>
-            <td>${escapeHtml(test.machine || test.machineId || '-')}</td>
-            <td>${escapeHtml(test.product || '-')}</td>
-            <td>${escapeHtml(test.process || '-')}</td>
-            <td>${escapeHtml(test.lotNumber || '-')}</td>
-            <td>${escapeHtml(test.yarnCount || test.targetCount || '-')}</td>
-            <td>${escapeHtml(test.avgCount || '-')}</td>
-            <td>${escapeHtml(test.countCV || '-')}</td>
-            <td>${escapeHtml(test.avgStrength || '-')}</td>
-            <td>${escapeHtml(test.avgCSP || '-')}</td>
-            <td>${escapeHtml(test.outOfLimitCount || '0.0')}%</td>
-            <td><button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${revIndex})">View Details</button></td>
-          `;
-        } else {
-          // Fallback for Sliver/Carding tests to match 11-column structure (+ checkbox + details)
-          const summary = formatProductSummary(test.summaryByProduct);
-          const targetsText = formatTargets(test.targets);
-          tr.innerHTML = `
-            <td><input type="checkbox" onchange="onSavedSelectionChanged()"></td>
-            <td>${escapeHtml(test.dateTime || 'N/A')}</td>
-            <td colspan="4" style="text-align:left; font-size:11px; color:#666;">Sliver/Carding: ${escapeHtml(summary)}</td>
-            <td>${escapeHtml(targetsText)}</td>
-            <td colspan="5">-</td>
-            <td><button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${revIndex})">View Details</button></td>
-          `;
-        }
-        tbody.appendChild(tr);
-      });
-
-      document.getElementById('deleteBtn').style.display = 'none';
-      document.getElementById('printSelectedBtn').style.display = 'none';
-    }
-
-    function viewDetailsByRow(event, revIndex) {
-      event.preventDefault();
-      event.stopPropagation();
-      const saved = getSavedTests();
-      const originalIndex = saved.length - 1 - revIndex;
-      const test = saved[originalIndex];
-      if (!test) return;
-      openDetails(test);
-    }
-
-    function onSavedSelectionChanged() {
-      const anyChecked = getSelectedSavedIndices().length > 0;
-      document.getElementById('deleteBtn').style.display = anyChecked ? 'inline-block' : 'none';
-      document.getElementById('printSelectedBtn').style.display = anyChecked ? 'inline-block' : 'none';
-    }
-
-    function toggleSelectAll(master) {
-      const checkboxes = document.querySelectorAll('#savedList input[type="checkbox"]');
-      checkboxes.forEach(cb => cb.checked = master.checked);
-      onSavedSelectionChanged();
-    }
-
-    function getSelectedSavedIndices() {
-      const checkboxes = document.querySelectorAll('#savedList input[type="checkbox"]');
-      const saved = getSavedTests();
-      const selected = [];
-      checkboxes.forEach((cb, rowIndex) => {
-        if (!cb.checked) return;
-        // If filters are active, use filteredTests; otherwise use all saved tests
-        const testsList = filteredTests.length > 0 ? filteredTests : saved;
-        const revIndex = testsList.length - 1 - rowIndex;
-        const test = testsList[revIndex];
-        if (test) {
-          const originalIndex = saved.indexOf(test);
-          if (originalIndex >= 0) selected.push(originalIndex);
-        }
-      });
-      return selected;
-    }
-
-    function deleteSelected() {
-      const selected = new Set(getSelectedSavedIndices());
-      if (selected.size === 0) return;
-      if (!confirm('Are you sure you want to delete the selected tests?')) return;
-
-      const saved = getSavedTests();
-      const kept = saved.filter((_, idx) => !selected.has(idx));
-      setSavedTests(kept);
-      loadSavedTests();
-      closeDetails();
-    }
 
     // -----------------------------
     // Filtering functionality
@@ -5538,26 +5511,33 @@
 
         testsToExport.forEach(test => {
           if (test.testType === 'Count & Strength') {
+            const isLegacy = !test.hasOwnProperty('process');
+            let machineVal = test.machine || test.machineId || (isLegacy ? (test.testDate || '-') : '-');
+            let productVal = test.product || (isLegacy ? (test.operatorName || '-') : '-');
+            let processVal = test.process || (isLegacy ? (test.targetCount || '-') : '-');
+            let lotVal = test.lotNumber || (isLegacy ? (test.product || '-') + (test.metrics ? ` (${test.metrics.avgCount})` : '') : '-');
+
             summaryData.push([
               test.dateTime || 'N/A',
               test.reportNumber || 'N/A',
-              test.machine || test.machineId || '-',
-              test.product || '-',
-              test.process || '-',
-              test.lotNumber || '-',
+              machineVal,
+              productVal,
+              processVal,
+              lotVal,
               test.yarnCount || test.targetCount || '-',
-              test.avgCount || '-',
-              test.countCV || '-',
-              test.avgStrength || '-',
-              test.avgCSP || '-',
+              test.avgCount || test.metrics?.avgCount || '-',
+              test.countCV || test.metrics?.countCV || '-',
+              test.avgStrength || test.metrics?.avgStrength || '-',
+              test.avgCSP || test.metrics?.avgCSP || '-',
               (test.outOfLimitCount || '0.0') + '%',
               test.operatorName || 'N/A'
             ]);
           } else {
             const summary = formatProductSummary(test.summaryByProduct);
-            const targetsText = formatTargets(test.targets);
+            const targetsText = (typeof formatTargets === 'function') ? formatTargets(test.targets) : (test.yarnCount || test.targetCount || '-');
             summaryData.push([
               test.dateTime || 'N/A',
+              test.reportNumber || 'N/A',
               'Sliver',
               test.product || 'Various',
               '-',
@@ -5568,7 +5548,6 @@
               '-',
               '-',
               (test.oocCardsAll || 0) + '/' + (test.oocCoilersAll || 0),
-              test.reportNumber || 'N/A',
               test.operatorName || 'N/A'
             ]);
           }
