@@ -1821,6 +1821,7 @@
       document.getElementById('testSection').scrollIntoView({ behavior: 'smooth' });
       // Reset saved state when starting new test
       isCurrentTestSaved = false;
+      isTestSaved = false; // Reset global flag
       isDataCalculated = false;
       isDataModified = false;
 
@@ -2382,6 +2383,7 @@
     let detailsTest = null;
     let hasUnsavedData = false;
     let isDataCalculated = false; // Track if data has been calculated (needs recalculation if changed)
+    let isTestSaved = false; // Track if test has been saved (global flag)
     let isDataModified = false; // Track if user has modified data since last calculation
     let isCurrentTestSaved = false; // Track if current test has been saved saved
     let baseReportNumber = null; // Store base report number for versioning (e.g., "1018")
