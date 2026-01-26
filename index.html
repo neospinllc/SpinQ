@@ -2365,30 +2365,12 @@
       const checkboxes = document.querySelectorAll('#savedList input[type="checkbox"]');
       const selected = Array.from(checkboxes).filter(cb => cb.checked);
 
-      if (selected.length === 0) {
-        // Clear all restrictions
-        checkboxes.forEach(cb => {
-          cb.disabled = false;
-          cb.parentElement.parentElement.style.opacity = '1';
-        });
-      } else {
-        // Lock to the first selected Lot
-        const firstSelectedRow = selected[0].closest('tr');
-        const targetLot = firstSelectedRow.getAttribute('data-lot');
-
-        checkboxes.forEach(cb => {
-          const row = cb.closest('tr');
-          const lot = row.getAttribute('data-lot');
-          if (lot !== targetLot) {
-            cb.checked = false; // Uncheck any mismatched ones just in case
-            cb.disabled = true;
-            row.style.opacity = '0.4';
-          } else {
-            cb.disabled = false;
-            row.style.opacity = '1';
-          }
-        });
-      }
+      // We no longer lock to a specific lot for combined analysis
+      checkboxes.forEach(cb => {
+        cb.disabled = false;
+        const row = cb.closest('tr');
+        if (row) row.style.opacity = '1';
+      });
 
       const anyChecked = selected.length > 0;
       const multipleChecked = selected.length > 1;
@@ -4172,7 +4154,7 @@
             <td>${escapeHtml(test.avgCSP || test.metrics?.avgCSP || '-')}</td>
             <td>${escapeHtml(test.outOfLimitCount || '0.0')}%</td>
             <td><strong>${(test.rows || []).length}</strong></td>
-            <td><button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${originalIndex})">View Details</button></td>
+            <td><button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${finalIdx})">View Details</button></td>
           `;
         } else {
           // Sliver fallback or legacy sliver
@@ -4188,7 +4170,7 @@
             <td>${escapeHtml(targetsText)}</td>
             <td colspan="5">-</td>
             <td><strong>${sliverSamples}</strong></td>
-            <td><button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${originalIndex})">View Details</button></td>
+            <td><button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${finalIdx})">View Details</button></td>
           `;
         }
         list.appendChild(tr);
