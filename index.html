@@ -487,6 +487,7 @@
       border-radius: 14px;
       padding: 14px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      min-height: 350px;
     }
 
     /* Table Styles */
@@ -1395,7 +1396,7 @@
         </div>
 
         <div class="charts-grid"
-          style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:20px;">
+          style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:20px; min-height: 400px;">
           <div id="combined_avg_chart_container"></div>
           <div id="combined_single_chart_container"></div>
         </div>
@@ -5804,23 +5805,27 @@
         </div>
       `;
 
-      // Render Charts
-      destroyChartMap(combinedChartInstances, 'combined_avg_chart_container');
-      destroyChartMap(combinedChartInstances, 'combined_single_chart_container');
+      // Render Charts with a small delay to ensure DOM is ready
+      setTimeout(() => {
+        destroyChartMap(combinedChartInstances, 'combined_avg_chart_container');
+        destroyChartMap(combinedChartInstances, 'combined_single_chart_container');
 
-      const avgContainer = document.getElementById('combined_avg_chart_container');
-      const singleContainer = document.getElementById('combined_single_chart_container');
-      avgContainer.innerHTML = '';
-      singleContainer.innerHTML = '';
+        const avgContainer = document.getElementById('combined_avg_chart_container');
+        const singleContainer = document.getElementById('combined_single_chart_container');
+        if (!avgContainer || !singleContainer) return;
 
-      const avgChartId = 'combined_avg_chart';
-      const singleChartId = 'combined_single_chart';
+        avgContainer.innerHTML = '';
+        singleContainer.innerHTML = '';
 
-      avgContainer.appendChild(makeChartCard('Average Counts Distribution (By Test)', avgChartId));
-      singleContainer.appendChild(makeChartCard('All Single Values Distribution', singleChartId));
+        const avgChartId = 'combined_avg_chart';
+        const singleChartId = 'combined_single_chart';
 
-      plotDistribution(avgChartId, allAvgs, parseFloat(avgOfAvgs), lcl, ucl, 'Averages Distribution', combinedChartInstances, target);
-      plotDistribution(singleChartId, allSingles, parseFloat(avgOfAvgs), lcl, ucl, 'All Singles Distribution', combinedChartInstances, target);
+        avgContainer.appendChild(makeChartCard('Average Counts Distribution (By Test)', avgChartId));
+        singleContainer.appendChild(makeChartCard('All Single Values Distribution', singleChartId));
+
+        plotDistribution(avgChartId, allAvgs, parseFloat(avgOfAvgs), lcl, ucl, 'Averages Distribution', combinedChartInstances, target);
+        plotDistribution(singleChartId, allSingles, parseFloat(avgOfAvgs), lcl, ucl, 'All Singles Distribution', combinedChartInstances, target);
+      }, 50);
     }
 
     function closeCombinedDetails() {
