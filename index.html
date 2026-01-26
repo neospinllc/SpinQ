@@ -1887,6 +1887,9 @@
         const cvMetricStyle = isCVOutOfRange ?
           'background-color: #ef4444 !important;' : '';
 
+        // Get table rows first (needed for out-of-limit calculation)
+        const tableRows = document.querySelectorAll('#testTableBody tr');
+
         // Calculate % of readings outside limits
         let outOfLimitCount = 0;
         tableRows.forEach(row => {
@@ -1928,8 +1931,7 @@
         const countMean = parseFloat(avgCount);
         // lcl/ucl already calculated above - no need to recalculate
 
-        // Update Status Column
-        const tableRows = document.querySelectorAll('#testTableBody tr');
+        // Update Status Column (tableRows already defined above)
         tableRows.forEach(row => {
           const countCell = row.querySelector('.count-val');
           const statusCell = row.querySelector('.status-cell');
