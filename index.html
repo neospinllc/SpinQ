@@ -481,6 +481,29 @@
       background: #fff;
     }
 
+    /* Batch Metrics in Combined View */
+    .batch-metric-box {
+      padding: 15px !important;
+      border-radius: 8px !important;
+      color: #ffffff !important;
+      text-align: center !important;
+      border: none !important;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .batch-metric-box .label {
+      font-size: 12px !important;
+      opacity: 0.9 !important;
+      margin-bottom: 5px !important;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .batch-metric-box .value {
+      font-size: 24px !important;
+      font-weight: 700 !important;
+    }
+
     .chart-card {
       background: #fff;
       border: 1px solid #e5e7eb;
@@ -5774,58 +5797,71 @@
       const metricsDiv = document.getElementById('combinedMetrics');
       if (!metricsDiv) return;
 
-      const avgOfAvgsNum = parseFloat(avgOfAvgs);
-      const avgOfAvgsStyle = (!isNaN(avgOfAvgsNum) && !isNaN(lcl) && !isNaN(ucl) && (avgOfAvgsNum < lcl || avgOfAvgsNum > ucl))
-        ? 'background:#ef4444; color:#fff;' : 'background:#3498db; color:#fff;';
-      const cvNum = parseFloat(globalCV);
-      const cvStyle = (!isNaN(cvNum) && cvNum > 1.5) ? 'background:#ef4444; color:#fff;' : 'background:#3498db; color:#fff;';
-      const oocTestsStyle = oocTests > 0 ? 'background:#ef4444; color:#fff;' : 'background:#3498db; color:#fff;';
-      const oocSinglesStyle = oocSingles > 0 ? 'background:#ef4444; color:#fff;' : 'background:#3498db; color:#fff;';
+      try {
+        const avgOfAvgsNum = parseFloat(avgOfAvgs);
+        const avgOfAvgsStyle = (!isNaN(avgOfAvgsNum) && !isNaN(lcl) && !isNaN(ucl) && (avgOfAvgsNum < lcl || avgOfAvgsNum > ucl))
+          ? 'background:#ef4444;' : 'background:#3498db;';
+        const cvNum = parseFloat(globalCV);
+        const cvStyle = (!isNaN(cvNum) && cvNum > 1.5) ? 'background:#ef4444;' : 'background:#3498db;';
+        const oocTestsStyle = oocTests > 0 ? 'background:#ef4444;' : 'background:#3498db;';
+        const oocSinglesStyle = oocSingles > 0 ? 'background:#ef4444;' : 'background:#3498db;';
 
-      metricsDiv.innerHTML = `
-        <div class="print-metric" style="${avgOfAvgsStyle} border:none; padding:15px; border-radius:8px;">
-          <div class="label" style="opacity:0.9; font-size:12px;">Avg of Avgs (Ne)</div>
-          <div class="value" style="font-size:24px; font-weight:700;">${avgOfAvgs}</div>
-        </div>
-        <div class="print-metric" style="${cvStyle} border:none; padding:15px; border-radius:8px;">
-          <div class="label" style="opacity:0.9; font-size:12px;">Global Count CV%</div>
-          <div class="value" style="font-size:24px; font-weight:700;">${globalCV}${globalCV !== '-' ? '%' : ''}</div>
-        </div>
-        <div class="print-metric" style="background:#3498db; color:#fff; border:none; padding:15px; border-radius:8px;">
-          <div class="label" style="opacity:0.9; font-size:12px;">Avg CSP</div>
-          <div class="value" style="font-size:24px; font-weight:700;">${avgCSP}</div>
-        </div>
-        <div class="print-metric" style="${oocTestsStyle} border:none; padding:15px; border-radius:8px;">
-          <div class="label" style="opacity:0.9; font-size:12px;">OOC Tests</div>
-          <div class="value" style="font-size:24px; font-weight:700;">${oocTests}</div>
-        </div>
-        <div class="print-metric" style="${oocSinglesStyle} border:none; padding:15px; border-radius:8px;">
-          <div class="label" style="opacity:0.9; font-size:12px;">OOC Single Values</div>
-          <div class="value" style="font-size:24px; font-weight:700;">${oocSingles}</div>
-        </div>
-      `;
+        metricsDiv.innerHTML = `
+          <div class="batch-metric-box" style="${avgOfAvgsStyle}">
+            <div class="label">Avg of Avgs (Ne)</div>
+            <div class="value">${avgOfAvgs}</div>
+          </div>
+          <div class="batch-metric-box" style="${cvStyle}">
+            <div class="label">Global Count CV%</div>
+            <div class="value">${globalCV}${globalCV !== '-' ? '%' : ''}</div>
+          </div>
+          <div class="batch-metric-box" style="background:#3498db;">
+            <div class="label">Avg CSP</div>
+            <div class="value">${avgCSP}</div>
+          </div>
+          <div class="batch-metric-box" style="${oocTestsStyle}">
+            <div class="label">OOC Tests</div>
+            <div class="value">${oocTests}</div>
+          </div>
+          <div class="batch-metric-box" style="${oocSinglesStyle}">
+            <div class="label">OOC Single Values</div>
+            <div class="value">${oocSingles}</div>
+          </div>
+        `;
 
-      // Render Charts with a small delay to ensure DOM is ready
-      setTimeout(() => {
-        destroyChartMap(combinedChartInstances, 'combined_avg_chart_container');
-        destroyChartMap(combinedChartInstances, 'combined_single_chart_container');
+        // Render Charts with a small delay to ensure DOM is ready
+        setTimeout(() => {
+          try {
+            destroyChartMap(combinedChartInstances, 'combined_avg_chart_container');
+            destroyChartMap(combinedChartInstances, 'combined_single_chart_container');
 
-        const avgContainer = document.getElementById('combined_avg_chart_container');
-        const singleContainer = document.getElementById('combined_single_chart_container');
-        if (!avgContainer || !singleContainer) return;
+            const avgContainer = document.getElementById('combined_avg_chart_container');
+            const singleContainer = document.getElementById('combined_single_chart_container');
+            if (!avgContainer || !singleContainer) return;
 
-        avgContainer.innerHTML = '';
-        singleContainer.innerHTML = '';
+            avgContainer.innerHTML = '';
+            singleContainer.innerHTML = '';
 
-        const avgChartId = 'combined_avg_chart';
-        const singleChartId = 'combined_single_chart';
+            const avgChartId = 'combined_avg_chart';
+            const singleChartId = 'combined_single_chart';
 
-        avgContainer.appendChild(makeChartCard('Average Counts Distribution (By Test)', avgChartId));
-        singleContainer.appendChild(makeChartCard('All Single Values Distribution', singleChartId));
+            avgContainer.appendChild(makeChartCard('Average Counts Distribution (By Test)', avgChartId));
+            singleContainer.appendChild(makeChartCard('All Single Values Distribution', singleChartId));
 
-        plotDistribution(avgChartId, allAvgs, parseFloat(avgOfAvgs), lcl, ucl, 'Averages Distribution', combinedChartInstances, target);
-        plotDistribution(singleChartId, allSingles, parseFloat(avgOfAvgs), lcl, ucl, 'All Singles Distribution', combinedChartInstances, target);
-      }, 50);
+            if (allAvgs.length > 0) {
+              plotDistribution(avgChartId, allAvgs, parseFloat(avgOfAvgs), lcl, ucl, 'Averages Distribution', combinedChartInstances, target);
+            }
+            if (allSingles.length > 0) {
+              plotDistribution(singleChartId, allSingles, parseFloat(avgOfAvgs), lcl, ucl, 'All Singles Distribution', combinedChartInstances, target);
+            }
+          } catch (chartErr) {
+            console.error("Combined chart error:", chartErr);
+          }
+        }, 100);
+      } catch (err) {
+        console.error("Combined metrics error:", err);
+        metricsDiv.innerHTML = '<div style="grid-column: 1/-1; padding: 20px; color: #ef4444;">Error processing combined data analysis.</div>';
+      }
     }
 
     function closeCombinedDetails() {
