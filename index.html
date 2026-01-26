@@ -460,6 +460,27 @@
       }
     }
 
+    .details-panel {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      margin: 10px 0;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Inline details styling */
+    .detail-row td {
+      padding: 0 !important;
+      background-color: #f8fafc !important;
+    }
+
+    .inline-details-container {
+      padding: 20px;
+      border-top: 2px solid #3498db;
+      background: #fff;
+    }
+
     .chart-card {
       background: #fff;
       border: 1px solid #e5e7eb;
@@ -1463,31 +1484,6 @@
         </div>
       </div>
     </div>
-
-    <div id="detailsPanel" class="details-panel">
-      <div class="details-header">
-        <div>
-          <div class="details-title" id="detailsTitle">Report Details</div>
-          <div class="details-meta" id="detailsMeta"></div>
-        </div>
-        <div>
-          <button class="btn-muted" onclick="closeDetails()">Close</button>
-          <button class="btn-print" onclick="printDetails()">Print This Report</button>
-        </div>
-      </div>
-
-      <div class="details-charts">
-        <div id="detailsChartsGrid" class="charts-grid"></div>
-      </div>
-
-      <div class="details-table-wrap">
-        <h3 style="margin: 6px 0 10px; color:#0f172a;">Single Values (Shown only in Details)</h3>
-        <div style="overflow:auto;">
-          <table id="detailsTable"></table>
-        </div>
-      </div>
-    </div>
-  </div>
   </div>
 
   <!-- PRINT SECTION -->
@@ -2385,6 +2381,9 @@
       tbody.innerHTML = '';
       testsToDisplay.slice().reverse().forEach((test, revIndex) => {
         const tr = document.createElement('tr');
+        tr.id = `report-row-${revIndex}`;
+        const lotValRaw = test.lotNumber || ((!test.hasOwnProperty('process')) ? (test.product || '-') + (test.metrics ? ` (${test.metrics.avgCount})` : '') : '-');
+        tr.setAttribute('data-lot', lotValRaw);
 
         if (test.testType === 'Count & Strength') {
           // Schema detection for legacy records
@@ -2396,7 +2395,7 @@
           let lotVal = test.lotNumber || (isLegacy ? (test.product || '-') + (test.metrics ? ` (${test.metrics.avgCount})` : '') : '-');
 
           tr.innerHTML = `
-            <td><input type="checkbox" onchange="onSavedSelectionChanged()"></td>
+            <td><input type="checkbox" onchange="onSavedSelectionChanged(this)"></td>
             <td>${escapeHtml(test.dateTime || 'N/A')}</td>
             <td>${escapeHtml(test.reportNumber || 'N/A')}</td>
             <td>${escapeHtml(machineVal)}</td>
@@ -2418,7 +2417,7 @@
           const targetsText = (typeof formatTargets === 'function') ? formatTargets(test.targets) : (test.yarnCount || test.targetCount || '-');
 
           tr.innerHTML = `
-            <td><input type="checkbox" onchange="onSavedSelectionChanged()"></td>
+            <td><input type="checkbox" onchange="onSavedSelectionChanged(this)"></td>
             <td>${escapeHtml(test.dateTime || 'N/A')}</td>
             <td>${escapeHtml(test.reportNumber || 'N/A')}</td>
             <td colspan="4" style="text-align:left; font-size:11px; color:#666;">Sliver/Carding: ${escapeHtml(summary)}</td>
@@ -2443,11 +2442,46 @@
       const testsToDisplay = (typeof filteredTests !== 'undefined' && filteredTests.length > 0) ? filteredTests : saved;
       const test = testsToDisplay.slice().reverse()[revIndex];
       if (!test) return;
-      openDetails(test);
+
+      // If details already open for this exact row, close it (toggle)
+      const existing = document.getElementById(`detail-row-${revIndex}`);
+      if (existing) {
+        closeDetails();
+      } else {
+        openDetails(test, revIndex);
+      }
     }
 
-    function onSavedSelectionChanged() {
-      const anyChecked = getSelectedSavedIndices().length > 0;
+    function onSavedSelectionChanged(changedCb) {
+      const checkboxes = document.querySelectorAll('#savedList input[type="checkbox"]');
+      const selected = Array.from(checkboxes).filter(cb => cb.checked);
+
+      if (selected.length === 0) {
+        // Clear all restrictions
+        checkboxes.forEach(cb => {
+          cb.disabled = false;
+          cb.parentElement.parentElement.style.opacity = '1';
+        });
+      } else {
+        // Lock to the first selected Lot
+        const firstSelectedRow = selected[0].closest('tr');
+        const targetLot = firstSelectedRow.getAttribute('data-lot');
+
+        checkboxes.forEach(cb => {
+          const row = cb.closest('tr');
+          const lot = row.getAttribute('data-lot');
+          if (lot !== targetLot) {
+            cb.checked = false; // Uncheck any mismatched ones just in case
+            cb.disabled = true;
+            row.style.opacity = '0.4';
+          } else {
+            cb.disabled = false;
+            row.style.opacity = '1';
+          }
+        });
+      }
+
+      const anyChecked = selected.length > 0;
       const deleteBtn = document.getElementById('deleteBtn');
       const printSelectedBtn = document.getElementById('printSelectedBtn');
       if (deleteBtn) deleteBtn.style.display = anyChecked ? 'inline-block' : 'none';
@@ -2456,7 +2490,22 @@
 
     function toggleSelectAll(master) {
       const checkboxes = document.querySelectorAll('#savedList input[type="checkbox"]');
-      checkboxes.forEach(cb => cb.checked = master.checked);
+      if (master.checked) {
+        // Find the first non-disabled lot or use the first row's lot
+        const firstRow = document.querySelector('#savedList tr');
+        if (firstRow) {
+          const targetLot = firstRow.getAttribute('data-lot');
+          checkboxes.forEach(cb => {
+            if (cb.closest('tr').getAttribute('data-lot') === targetLot) {
+              cb.checked = true;
+            } else {
+              cb.checked = false;
+            }
+          });
+        }
+      } else {
+        checkboxes.forEach(cb => cb.checked = false);
+      }
       onSavedSelectionChanged();
     }
 
@@ -4901,18 +4950,60 @@
       });
     }
 
-    function openDetails(test) {
+    function openDetails(test, revIndex) {
       detailsTest = test;
 
-      document.getElementById('detailsPanel').style.display = 'block';
-      document.getElementById('detailsTitle').textContent = `Report ${test.reportNumber} — Details`;
+      // Close any already open details
+      closeDetails();
+
+      const parentRow = document.getElementById(`report-row-${revIndex}`);
+      if (!parentRow) return;
+
+      // Create the detail-row
+      const detailRow = document.createElement('tr');
+      detailRow.className = 'detail-row';
+      detailRow.id = `detail-row-${revIndex}`;
+
+      // We have 14 columns
+      detailRow.innerHTML = `
+        <td colspan="14">
+          <div class="inline-details-container">
+            <div class="details-header" style="padding-bottom:12px; border-bottom:1px solid #e5e7eb; margin-bottom:15px; display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="details-title" style="font-size:18px; font-weight:700; color:#1e293b; margin-bottom:4px;">Report ${test.reportNumber} — Details</div>
+                <div class="details-meta" style="font-size:13px; color:#64748b;"></div>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button class="btn-muted" onclick="closeDetails()" style="margin:0;">Close</button>
+                <button class="btn-print" onclick="printDetails()" style="margin:0;">Print This Report</button>
+              </div>
+            </div>
+            
+            <div id="inlineDetailsMeta"></div>
+
+            <div class="details-charts" style="margin-bottom:20px;">
+              <div id="detailsChartsGrid" class="charts-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px;"></div>
+            </div>
+
+            <div class="details-table-wrap">
+              <h3 style="margin: 6px 0 10px; color:#1e293b; font-size:16px;">Detailed Data</h3>
+              <div style="overflow:auto; max-height:400px; border:1px solid #e2e8f0; border-radius:8px;">
+                <table id="detailsTable" style="width:100%; border-collapse:collapse;"></table>
+              </div>
+            </div>
+          </div>
+        </td>
+      `;
+
+      // Insert after parent row
+      parentRow.parentNode.insertBefore(detailRow, parentRow.nextSibling);
 
       const isCountStrength = test.testType === 'Count & Strength';
 
       if (isCountStrength) {
         // --- Count & Strength Details ---
-        document.getElementById('detailsMeta').innerHTML = `
-          <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; font-size:13px;">
+        document.getElementById('inlineDetailsMeta').innerHTML = `
+          <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; font-size:13px; color:#1e293b; margin-bottom:15px;">
             <div>Date/Time: <strong>${escapeHtml(test.dateTime || '-')}</strong></div>
             <div>Machine: <strong>${escapeHtml(test.machine || '-')}</strong></div>
             <div>Product: <strong>${escapeHtml(test.product || '-')}</strong></div>
@@ -4920,7 +5011,7 @@
             <div>Lot: <strong>${escapeHtml(test.lotNumber || '-')}</strong></div>
             <div>Target Count: <strong>${escapeHtml(test.yarnCount || '-')}</strong></div>
           </div>
-          <div style="margin-top:10px; padding:10px; background:#f8fafc; border-radius:6px; display:flex; gap:20px; font-size:14px; border:1px solid #e2e8f0;">
+          <div style="margin-bottom:20px; padding:12px; background:#f1f5f9; border-radius:8px; display:flex; flex-wrap:wrap; gap:20px; font-size:14px; border:1px solid #e2e8f0;">
             <span>Avg Count: <strong>${test.avgCount || '-'}</strong></span>
             <span>Count CV%: <strong>${test.countCV || '-'}</strong></span>
             <span>Avg Strength: <strong>${test.avgStrength || '-'}</strong></span>
@@ -4933,25 +5024,25 @@
         t.innerHTML = `
           <thead>
             <tr>
-              <th>Sample</th>
-              <th>Pos</th>
-              <th>Weight (g)</th>
-              <th>Source</th>
-              <th>Count (Ne)</th>
-              <th>Strength (lbs)</th>
-              <th>CSP</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">Sample</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">Pos</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">Weight (g)</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">Source</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">Count (Ne)</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">Strength (lbs)</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-bottom:1px solid #e2e8f0;">CSP</th>
             </tr>
           </thead>
           <tbody>
             ${(test.rows || []).map(r => `
               <tr>
-                <td><strong>${r.sample}</strong></td>
-                <td>${r.pos || '-'}</td>
-                <td>${r.weight || '-'}</td>
-                <td>${r.source || 'Manual'}</td>
-                <td><strong>${r.count || '-'}</strong></td>
-                <td>${r.strength || '-'}</td>
-                <td>${r.csp || '-'}</td>
+                <td style="padding:8px 10px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;"><strong>${r.sample}</strong></td>
+                <td style="padding:8px 10px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">${r.pos || '-'}</td>
+                <td style="padding:8px 10px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">${r.weight || '-'}</td>
+                <td style="padding:8px 10px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">${r.source || 'Manual'}</td>
+                <td style="padding:8px 10px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;"><strong>${r.count || '-'}</strong></td>
+                <td style="padding:8px 10px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">${r.strength || '-'}</td>
+                <td style="padding:8px 10px; border-bottom:1px solid #e2e8f0;">${r.csp || '-'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -4960,7 +5051,6 @@
         // Render Charts for Count & Strength
         destroyChartMap(detailsChartInstances, 'detailsChartsGrid');
         const grid = document.getElementById('detailsChartsGrid');
-        grid.innerHTML = '';
 
         if (test.rawData) {
           const countChartId = 'details_count_dist';
@@ -4988,9 +5078,12 @@
 
       } else {
         // --- Sliver / Carding Details (Legacy Support) ---
-        document.getElementById('detailsMeta').innerHTML =
-          `Date/Time: <strong>${escapeHtml(test.dateTime || '-')}</strong> | Test Date: <strong>${escapeHtml(test.testDate || '-')}</strong> | Operator: <strong>${escapeHtml(test.operatorName || '-')}</strong><br>` +
-          `Targets: <strong>${escapeHtml(formatTargets(test.targets))}</strong>`;
+        document.getElementById('inlineDetailsMeta').innerHTML = `
+          <div style="font-size:14px; color:#1e293b; margin-bottom:15px;">
+            Date/Time: <strong>${escapeHtml(test.dateTime || '-')}</strong> | Test Date: <strong>${escapeHtml(test.testDate || '-')}</strong> | Operator: <strong>${escapeHtml(test.operatorName || '-')}</strong><br>
+            Targets: <strong>${escapeHtml(formatTargets(test.targets))}</strong>
+          </div>
+        `;
 
         const groups = groupData(test.cardRows || []);
         const productsPresent = (test.productsPresent && test.productsPresent.length)
@@ -5008,16 +5101,16 @@
         t.innerHTML = `
           <thead>
             <tr>
-              <th>Card #</th>
-              <th>Product</th>
-              <th>Target (g/m)</th>
-              <th>Coiler 1</th>
-              <th>Coiler 2</th>
-              <th>Coiler 3</th>
-              <th>Coiler 4</th>
-              <th>Avg</th>
-              <th>Min</th>
-              <th>Max</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">Card #</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">Product</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">Target (g/m)</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">C1</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">C2</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">C3</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-right:10px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">C4</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-right:10px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">Avg</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-right:10px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">Min</th>
+              <th style="background:#f8fafc; padding:10px; text-align:left; border-bottom:1px solid #e2e8f0;">Max</th>
             </tr>
           </thead>
           <tbody>
@@ -5030,13 +5123,13 @@
           const coilerMax = coilers.length > 0 ? Math.max(...coilers).toFixed(3) : '-';
           return `
                 <tr>
-                  <td><strong>${r.cardNo}</strong></td>
-                  <td>${escapeHtml(r.product || '')}</td>
-                  <td style="font-weight: 600; color: #2c3e50;">${targetValue}</td>
-                  ${(r.coilers || []).map(v => `<td>${v !== null && isFinite(v) ? Number(v).toFixed(3) : '-'}</td>`).join('')}
-                  <td><strong>${r.avg !== null && isFinite(r.avg) ? Number(r.avg).toFixed(3) : '-'}</strong></td>
-                  <td>${coilerMin}</td>
-                  <td>${coilerMax}</td>
+                  <td style="padding:8px 10px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;"><strong>${r.cardNo}</strong></td>
+                  <td style="padding:8px 10px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">${escapeHtml(r.product || '')}</td>
+                  <td style="padding:8px 10px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; font-weight: 600; color: #2c3e50;">${targetValue}</td>
+                  ${(r.coilers || []).map(v => `<td style="padding:8px 10px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">${v !== null && isFinite(v) ? Number(v).toFixed(3) : '-'}</td>`).join('')}
+                  <td style="padding:8px 10px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;"><strong>${r.avg !== null && isFinite(r.avg) ? Number(r.avg).toFixed(3) : '-'}</strong></td>
+                  <td style="padding:8px 10px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">${coilerMin}</td>
+                  <td style="padding:8px 10px; border-bottom:1px solid #e2e8f0;">${coilerMax}</td>
                 </tr>
               `;
         }).join('')}
@@ -5047,9 +5140,9 @@
 
     function closeDetails() {
       detailsTest = null;
-      document.getElementById('detailsPanel').style.display = 'none';
       destroyChartMap(detailsChartInstances, 'detailsChartsGrid');
-      document.getElementById('detailsTable').innerHTML = '';
+      const oldRow = document.querySelector('.detail-row');
+      if (oldRow) oldRow.parentNode.removeChild(oldRow);
     }
 
     // -----------------------------
