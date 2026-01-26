@@ -4949,6 +4949,7 @@
       printChartInstances.clear();
 
       // Create charts grid only if mode is not 'noCharts'
+      console.log('Print mode:', mode, 'Mode check:', mode !== 'noCharts');
       if (mode !== 'noCharts') {
         const grid = document.createElement('div');
         grid.className = 'print-grid';
@@ -4959,8 +4960,13 @@
         const strengths = test.rawData?.strengths || [];
         const csps = test.rawData?.csps || [];
 
+        console.log('Counts length:', counts.length, 'Strengths length:', strengths.length);
+        console.log('Chart conditions - Count:', counts.length > 0 && (mode === 'all' || mode === 'countOnly'));
+        console.log('Chart conditions - Strength:', strengths.length > 0 && mode === 'all');
+
         // Count chart - always show for 'all' and 'countOnly' modes
         if (counts.length > 0 && (mode === 'all' || mode === 'countOnly')) {
+          console.log('Creating Count chart...');
           const countChartId = 'print_count_dist';
           grid.appendChild(makePrintChartCard(`Count Distribution (Ne) - Limits +/-${test.rangePercent || 2.5}%`, countChartId));
           const countMean = parseFloat(test.avgCount);
@@ -4971,15 +4977,18 @@
           const valMatch = selCountVal.match(/[\d.]+/);
           const countTarget = valMatch ? parseFloat(valMatch[0]) : null;
           plotDistribution(countChartId, counts, countMean, lcl, ucl, 'Count Distribution', printChartInstances, countTarget);
+          console.log('Count chart created');
         }
 
         // Strength chart - only show for 'all' mode
         if (strengths.length > 0 && mode === 'all') {
+          console.log('Creating Strength chart...');
           const strengthChartId = 'print_strength_dist';
           grid.appendChild(makePrintChartCard('Strength Distribution (lbs)', strengthChartId));
           const strengthMean = parseFloat(test.avgStrength);
           const strengthLims = limitsFromMean(strengthMean, 10.0);
           plotDistribution(strengthChartId, strengths, strengthMean, strengthLims.lcl, strengthLims.ucl, 'Strength Distribution', printChartInstances, null);
+          console.log('Strength chart created');
         }
       }
 
