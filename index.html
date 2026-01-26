@@ -1243,6 +1243,10 @@
         <button type="button" id="calcBtn" onclick="calculateResults()">Calculate Results</button>
         <button type="button" class="btn-save" id="saveBtn" disabled>Save Test</button>
         <button type="button" class="btn-print" id="printCurrentBtn" onclick="handlePrintClick()">Print Current</button>
+        <button type="button" class="btn-print" id="printCountOnlyBtn" onclick="handlePrintClick('countOnly')"
+          style="background: #27ae60;">Print Current (Only Count Chart)</button>
+        <button type="button" class="btn-print" id="printNoChartsBtn" onclick="handlePrintClick('noCharts')"
+          style="background: #8e44ad;">Print Current (No Charts)</button>
       </div>
 
       <!-- Metrics for Count/Strength -->
@@ -1896,13 +1900,13 @@
     }
 
     // Handle Print button click with auto-calculate
-    function handlePrintClick() {
+    function handlePrintClick(mode = 'all') {
       if (isDataModified || !isDataCalculated) {
         console.log("Auto-calculating before print since data changed...");
         calculateResults();
       }
-      // Proceed with print
-      printCurrent(); // FIXED: was calling undefined printResult()
+      // Proceed with print - pass mode to control which charts to show
+      printCurrent(mode);
     }
 
     const triggerAutoCalc = debounce(() => {
@@ -4860,27 +4864,33 @@
       printFromTests([detailsTest], `Saved Report ${detailsTest.reportNumber}`);
     }
 
-    function printCurrent() {
+    function printCurrent(mode = 'all') {
       if (!currentTest) { alert('Please calculate results first.'); return; }
       // Route to appropriate print function based on test type
       console.log('Print Current - Test Type:', currentTest.testType);
+      console.log('Print Mode:', mode);
       console.log('Current Test:', currentTest);
       // Check both testType and presence of rawData (Count & Strength specific)
       if (currentTest.testType === 'Count & Strength' || currentTest.rawData) {
-        printCountStrengthTest(currentTest);
+        printCountStrengthTest(currentTest, mode);
       } else {
         printFromTestsWithTable([currentTest], `Current Test ${currentTest.reportNumber}`);
       }
     }
 
-    function printCountStrengthTest(test) {
+    function printCountStrengthTest(test, mode = 'all') {
       const printSection = document.getElementById('printSection');
       const printMeta = document.getElementById('printMeta');
       const printChartsContainer = document.getElementById('printChartsContainer');
       const printTablesContainer = document.getElementById('printTablesContainer');
       const printMetrics = document.getElementById('printMetrics');
 
-      document.getElementById('printTitle').textContent = `Count and Skein Strength Test — Report ${test.reportNumber}`;
+      // Update title based on mode
+      let titleSuffix = '';
+      if (mode === 'countOnly') titleSuffix = ' (Count Chart Only)';
+      else if (mode === 'noCharts') titleSuffix = ' (No Charts)';
+
+      document.getElementById('printTitle').textContent = `Count and Skein Strength Test — Report ${test.reportNumber}${titleSuffix}`;
 
       // Print metadata
       printMeta.innerHTML = `
@@ -4937,37 +4947,39 @@
       for (const ch of printChartInstances.values()) ch.destroy();
       printChartInstances.clear();
 
-      // Create charts grid
-      const grid = document.createElement('div');
-      grid.className = 'print-grid';
-      printChartsContainer.appendChild(grid);
+      // Create charts grid only if mode is not 'noCharts'
+      if (mode !== 'noCharts') {
+        const grid = document.createElement('div');
+        grid.className = 'print-grid';
+        printChartsContainer.appendChild(grid);
 
-      // Get data from test
-      const counts = test.rawData?.counts || [];
-      const strengths = test.rawData?.strengths || [];
-      const csps = test.rawData?.csps || [];
+        // Get data from test
+        const counts = test.rawData?.counts || [];
+        const strengths = test.rawData?.strengths || [];
+        const csps = test.rawData?.csps || [];
 
-      // Count chart
-      if (counts.length > 0) {
-        const countChartId = 'print_count_dist';
-        grid.appendChild(makePrintChartCard(`Count Distribution (Ne) - Limits +/-${test.rangePercent || 2.5}%`, countChartId));
-        const countMean = parseFloat(test.avgCount);
-        const lcl = parseFloat(test.lcl);
-        const ucl = parseFloat(test.ucl);
-        const selCountEl = document.getElementById('selCount');
-        const selCountVal = selCountEl ? selCountEl.value : '';
-        const valMatch = selCountVal.match(/[\d.]+/);
-        const countTarget = valMatch ? parseFloat(valMatch[0]) : null;
-        plotDistribution(countChartId, counts, countMean, lcl, ucl, 'Count Distribution', printChartInstances, countTarget);
-      }
+        // Count chart - always show for 'all' and 'countOnly' modes
+        if (counts.length > 0 && (mode === 'all' || mode === 'countOnly')) {
+          const countChartId = 'print_count_dist';
+          grid.appendChild(makePrintChartCard(`Count Distribution (Ne) - Limits +/-${test.rangePercent || 2.5}%`, countChartId));
+          const countMean = parseFloat(test.avgCount);
+          const lcl = parseFloat(test.lcl);
+          const ucl = parseFloat(test.ucl);
+          const selCountEl = document.getElementById('selCount');
+          const selCountVal = selCountEl ? selCountEl.value : '';
+          const valMatch = selCountVal.match(/[\d.]+/);
+          const countTarget = valMatch ? parseFloat(valMatch[0]) : null;
+          plotDistribution(countChartId, counts, countMean, lcl, ucl, 'Count Distribution', printChartInstances, countTarget);
+        }
 
-      // Strength chart
-      if (strengths.length > 0) {
-        const strengthChartId = 'print_strength_dist';
-        grid.appendChild(makePrintChartCard('Strength Distribution (lbs)', strengthChartId));
-        const strengthMean = parseFloat(test.avgStrength);
-        const strengthLims = limitsFromMean(strengthMean, 10.0);
-        plotDistribution(strengthChartId, strengths, strengthMean, strengthLims.lcl, strengthLims.ucl, 'Strength Distribution', printChartInstances, null);
+        // Strength chart - only show for 'all' mode
+        if (strengths.length > 0 && mode === 'all') {
+          const strengthChartId = 'print_strength_dist';
+          grid.appendChild(makePrintChartCard('Strength Distribution (lbs)', strengthChartId));
+          const strengthMean = parseFloat(test.avgStrength);
+          const strengthLims = limitsFromMean(strengthMean, 10.0);
+          plotDistribution(strengthChartId, strengths, strengthMean, strengthLims.lcl, strengthLims.ucl, 'Strength Distribution', printChartInstances, null);
+        }
       }
 
       // Create individual test results table
