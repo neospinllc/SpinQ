@@ -1428,7 +1428,7 @@
       <table id="savedTable">
         <thead>
           <tr>
-            <th style="width:30px;"><input type="checkbox" onchange="toggleSelectAll(this)"></th>
+            <th style="width:30px;"><input type="checkbox" id="selectAllHeader" onchange="toggleSelectAll(this)"></th>
             <th onclick="sortSavedTests('dateTime')" style="cursor:pointer;">Date Time <span id="sort-dateTime"></span>
             </th>
             <th onclick="sortSavedTests('reportNumber')" style="cursor:pointer;">Report # <span
@@ -2399,26 +2399,22 @@
       if (deleteBtn) deleteBtn.style.display = anyChecked ? 'inline-block' : 'none';
       if (printSelectedBtn) printSelectedBtn.style.display = anyChecked ? 'inline-block' : 'none';
       if (viewCombinedBtn) viewCombinedBtn.style.display = multipleChecked ? 'inline-block' : 'none';
+
+      // Sync header checkbox
+      const headerCB = document.getElementById('selectAllHeader');
+      if (headerCB) {
+        const checkboxes = document.querySelectorAll('#savedList input[type="checkbox"]');
+        if (checkboxes.length > 0) {
+          headerCB.checked = Array.from(checkboxes).every(cb => cb.checked);
+        } else {
+          headerCB.checked = false;
+        }
+      }
     }
 
     function toggleSelectAll(master) {
       const checkboxes = document.querySelectorAll('#savedList input[type="checkbox"]');
-      if (master.checked) {
-        // Find the first non-disabled lot or use the first row's lot
-        const firstRow = document.querySelector('#savedList tr');
-        if (firstRow) {
-          const targetLot = firstRow.getAttribute('data-lot');
-          checkboxes.forEach(cb => {
-            if (cb.closest('tr').getAttribute('data-lot') === targetLot) {
-              cb.checked = true;
-            } else {
-              cb.checked = false;
-            }
-          });
-        }
-      } else {
-        checkboxes.forEach(cb => cb.checked = false);
-      }
+      checkboxes.forEach(cb => cb.checked = master.checked);
       onSavedSelectionChanged();
     }
 
@@ -5818,6 +5814,10 @@
           <div class="batch-metric-box" style="background:#3498db;">
             <div class="label">Avg CSP</div>
             <div class="value">${avgCSP}</div>
+          </div>
+          <div class="batch-metric-box" style="background:#3498db;">
+            <div class="label">Total Samples</div>
+            <div class="value">${allSingles.length}</div>
           </div>
           <div class="batch-metric-box" style="${oocTestsStyle}">
             <div class="label">OOC Tests</div>
