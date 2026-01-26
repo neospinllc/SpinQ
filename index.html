@@ -1900,7 +1900,7 @@
       tr.innerHTML = `
             <td>${idx}</td>
             <td><input type="text" class="card-input pos-val" placeholder="#"></td>
-            <td><input type="number" class="card-input weight-val scale-input" id="weight_${idx}" oninput="updateSource(this); calcRow(this)" step="0.01" onfocus="setActiveInput(this)"></td>
+            <td><input type="number" class="card-input weight-val scale-input" id="weight_${idx}" oninput="updateSource(this); calcRow(this)" step="0.0001" onfocus="setActiveInput(this)"></td>
             <td class="source-cell" style="font-size: 11px; color: #7f8c8d; text-align: center;">Manual</td>
             <td class="count-val" style="font-weight:bold;">-</td>
             <td><input type="number" class="card-input strength-val" oninput="calcRow(this)" step="0.1"></td>
@@ -2925,7 +2925,7 @@
         const wVal = targetWeight + (Math.random() - 0.5) * (targetWeight * 0.05);
         const sVal = targetStrength + (Math.random() - 0.5) * (targetStrength * 0.10);
 
-        row.querySelector('.weight-val').value = wVal.toFixed(3);
+        row.querySelector('.weight-val').value = wVal.toFixed(4);
         row.querySelector('.strength-val').value = sVal.toFixed(1);
         row.querySelector('.pos-val').value = Math.floor(Math.random() * 20) + 1;
         calcRow(row.querySelector('.weight-val'));
