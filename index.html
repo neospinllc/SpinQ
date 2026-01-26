@@ -1041,41 +1041,7 @@
 
 <body>
   <script>
-    // Debug script to ensure app visibility and hide blockers
-    window.onerror = function (msg, url, line) {
-      console.error("Error: " + msg + "\nLine: " + line);
-    };
-
-    document.addEventListener('DOMContentLoaded', function () {
-      try {
-        // 1. Hide potential blockers (Modals, Overlays)
-        const overlays = document.querySelectorAll('.modal-overlay, .mobile-warning, #saveConfirmModal');
-        overlays.forEach(el => {
-          el.style.display = 'none';
-          el.style.visibility = 'hidden';
-        });
-
-        // 2. Force Main App Visibility
-        const app = document.getElementById('mainAppView');
-        if (app) {
-          app.style.display = 'block';
-          app.style.visibility = 'visible';
-          app.style.opacity = '1';
-          app.style.zIndex = '1'; // Reset z-index to avoid stacking issues
-          // Remove debug styles
-          app.style.border = 'none';
-          app.style.position = 'static';
-          app.style.minHeight = 'auto'; // Let content decide height
-        }
-
-        // 3. Ensure Body is White
-        document.body.style.backgroundColor = 'white';
-        document.body.style.overflow = 'auto';
-
-      } catch (e) {
-        console.error("Debug Error: " + e.message);
-      }
-    });
+    // Debug script removed for clean state
   </script>
 
   <!-- CONFIGURATION VIEW -->
@@ -1085,12 +1051,48 @@
   <div id="loginView" class="container-center" style="display: none !important;"></div>
   <div id="signupView" class="container-center" style="display: none !important;"></div>
 
-  <!-- CONFIGURATION REMOVED FOR DEBUGGING -->
+  <!-- CONFIGURATION VIEW -->
+  <div id="configView" class="container" style="display: none;">
+    <div class="config-header">
+      <h2 style="margin: 0;">System Configuration</h2>
+      <div>
+        <span id="configSaveStatus"
+          style="color: #27ae60; font-weight: 600; margin-right: 15px; opacity: 0; transition: opacity 0.5s;">Saved!</span>
+        <button class="btn-muted" onclick="exitConfig()">Back to Test</button>
+      </div>
+    </div>
+    <div class="config-grid">
+      <div class="config-card">
+        <div class="card-title">Machines</div>
+        <div class="card-subtitle">Separated by comma or new line</div>
+        <textarea id="cfgMachines" class="config-textarea" placeholder="M1, M2, M3..."></textarea>
+      </div>
+      <div class="config-card">
+        <div class="card-title">Products</div>
+        <div class="card-subtitle">Separated by comma or new line</div>
+        <textarea id="cfgProducts" class="config-textarea" placeholder="P1, P2..."></textarea>
+      </div>
+      <div class="config-card">
+        <div class="card-title">Processes</div>
+        <div class="card-subtitle">Separated by comma or new line</div>
+        <textarea id="cfgProcesses" class="config-textarea" placeholder="Carding, Drawing..."></textarea>
+      </div>
+      <div class="config-card">
+        <div class="card-title">Lot Numbers</div>
+        <div class="card-subtitle">Separated by comma or new line</div>
+        <textarea id="cfgLots" class="config-textarea" placeholder="L001, L002..."></textarea>
+      </div>
+      <div class="config-card">
+        <div class="card-title">Yarn Counts</div>
+        <div class="card-subtitle">Separated by comma or new line</div>
+        <textarea id="cfgCounts" class="config-textarea" placeholder="30s, 40s..."></textarea>
+      </div>
+    </div>
+  </div>
 
   <!-- MAIN APP VIEW -->
   <!-- MAIN APP VIEW -->
-  <div id="mainAppView" class="container"
-    style="display: block !important; visibility: visible !important; opacity: 1 !important; min-height: 500px;">
+  <div id="mainAppView" class="container">
     <div class="header">
       <div style="min-width:180px; color:#7f8c8d; font-weight:600;">SPINWISELY</div>
       <div class="app-title">Count and Skein Strength Test</div>
