@@ -4723,7 +4723,199 @@
 
     function printCurrent() {
       if (!currentTest) { alert('Please calculate results first.'); return; }
-      printFromTestsWithTable([currentTest], `Current Test ${currentTest.reportNumber}`);
+      // Route to appropriate print function based on test type
+      if (currentTest.testType === 'Count & Strength') {
+        printCountStrengthTest(currentTest);
+      } else {
+        printFromTestsWithTable([currentTest], `Current Test ${currentTest.reportNumber}`);
+      }
+    }
+
+    function printCountStrengthTest(test) {
+      const printSection = document.getElementById('printSection');
+      const printMeta = document.getElementById('printMeta');
+      const printChartsContainer = document.getElementById('printChartsContainer');
+      const printTablesContainer = document.getElementById('printTablesContainer');
+      const printMetrics = document.getElementById('printMetrics');
+
+      document.getElementById('printTitle').textContent = `Count and Skein Strength Test — Report ${test.reportNumber}`;
+
+      // Print metadata
+      printMeta.innerHTML = `
+        <div><strong>Report #:</strong> ${escapeHtml(test.reportNumber || '-')}</div>
+        <div><strong>Test Date:</strong> ${escapeHtml(test.testDate || '-')}</div>
+        <div><strong>Operator:</strong> ${escapeHtml(test.operatorName || '-')}</div>
+        <div><strong>Machine:</strong> ${escapeHtml(test.machineId || '-')} | <strong>Product:</strong> ${escapeHtml(test.product || '-')} | <strong>Process:</strong> ${escapeHtml(test.process || '-')}</div>
+        <div><strong>Lot Number:</strong> ${escapeHtml(test.lotNumber || '-')} | <strong>Yarn Count:</strong> ${escapeHtml(test.yarnCount || '-')}</div>
+      `;
+
+      // Print metrics
+      const countMetricStyle = (parseFloat(test.avgCount) < parseFloat(test.lcl) || parseFloat(test.avgCount) > parseFloat(test.ucl)) ?
+        'background-color: #ef4444 !important;' : 'background-color: #3498db !important;';
+
+      printMetrics.innerHTML = `
+        <div class="print-metric" style="${countMetricStyle} -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+          <div class="label">Avg Count (Ne)</div>
+          <div class="value">${test.avgCount || '-'}</div>
+        </div>
+        <div class="print-metric" style="background-color: #3498db !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+          <div class="label">Avg Strength (lbs)</div>
+          <div class="value">${test.avgStrength || '-'}</div>
+        </div>
+        <div class="print-metric" style="background-color: #3498db !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+          <div class="label">Avg CSP</div>
+          <div class="value">${test.avgCSP || '-'}</div>
+        </div>
+        <div class="print-metric" style="background-color: #3498db !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+          <div class="label">Count CV%</div>
+          <div class="value">${test.countCV || '-'}%</div>
+        </div>
+        <div class="print-metric" style="background-color: #f8f9fa !important; color: #333 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;">
+          <div class="label">LCL / UCL</div>
+          <div class="value">${test.lcl || '-'} / ${test.ucl || '-'}</div>
+        </div>
+      `;
+
+      printChartsContainer.innerHTML = '';
+      printTablesContainer.innerHTML = '';
+
+      // Destroy old print charts
+      for (const ch of printChartInstances.values()) ch.destroy();
+      printChartInstances.clear();
+
+      // Create charts grid
+      const grid = document.createElement('div');
+      grid.className = 'print-grid';
+      printChartsContainer.appendChild(grid);
+
+      // Get data from test
+      const counts = test.rawData?.counts || [];
+      const strengths = test.rawData?.strengths || [];
+      const csps = test.rawData?.csps || [];
+
+      // Count chart
+      if (counts.length > 0) {
+        const countChartId = 'print_count_dist';
+        grid.appendChild(makePrintChartCard(`Count Distribution (Ne) - Limits +/-${test.rangePercent || 2.5}%`, countChartId));
+        const countMean = parseFloat(test.avgCount);
+        const lcl = parseFloat(test.lcl);
+        const ucl = parseFloat(test.ucl);
+        const selCountEl = document.getElementById('selCount');
+        const selCountVal = selCountEl ? selCountEl.value : '';
+        const valMatch = selCountVal.match(/[\d.]+/);
+        const countTarget = valMatch ? parseFloat(valMatch[0]) : null;
+        plotDistribution(countChartId, counts, countMean, lcl, ucl, 'Count Distribution', printChartInstances, countTarget);
+      }
+
+      // Strength chart
+      if (strengths.length > 0) {
+        const strengthChartId = 'print_strength_dist';
+        grid.appendChild(makePrintChartCard('Strength Distribution (lbs)', strengthChartId));
+        const strengthMean = parseFloat(test.avgStrength);
+        const strengthLims = limitsFromMean(strengthMean, 10.0);
+        plotDistribution(strengthChartId, strengths, strengthMean, strengthLims.lcl, strengthLims.ucl, 'Strength Distribution', printChartInstances, null);
+      }
+
+      // Create individual test results table
+      const tableDiv = document.createElement('div');
+      tableDiv.innerHTML = `<h3 style="margin: 12px 0 8px; font-size: 14px; font-weight: bold;">Individual Sample Results</h3>`;
+      const table = document.createElement('table');
+      table.style.borderCollapse = 'collapse';
+      table.style.width = '100%';
+      table.style.fontSize = '11px';
+
+      // Build table rows from the actual test table data
+      const testRows = document.querySelectorAll('#testTableBody tr');
+      let tableBodyHTML = '';
+      let sampleNum = 1;
+
+      testRows.forEach((row, idx) => {
+        const weightInput = row.querySelector('.weight-val');
+        const strengthInput = row.querySelector('.strength-val');
+        const countCell = row.querySelector('.count-val');
+        const cspCell = row.querySelector('.csp-val');
+        const statusCell = row.querySelector('.status-cell');
+
+        if (weightInput && strengthInput && countCell && cspCell) {
+          const weight = weightInput.value || '-';
+          const strength = strengthInput.value || '-';
+          const count = countCell.textContent || '-';
+          const csp = cspCell.textContent || '-';
+          const status = statusCell ? statusCell.textContent : '-';
+          const statusColor = (status === 'OOC') ? '#ef4444' : '#10b981';
+          const rowBg = (status === 'OOC') ? '#fef2f2' : '';
+
+          tableBodyHTML += `
+            <tr style="background: ${rowBg};">
+              <td style="padding: 6px 8px; border: 1px solid #d1d5db; text-align: center;">${sampleNum}</td>
+              <td style="padding: 6px 8px; border: 1px solid #d1d5db; text-align: center;">${idx + 1}</td>
+              <td style="padding: 6px 8px; border: 1px solid #d1d5db; text-align: right;">${weight}</td>
+              <td style="padding: 6px 8px; border: 1px solid #d1d5db; text-align: right;">${count}</td>
+              <td style="padding: 6px 8px; border: 1px solid #d1d5db; text-align: right;">${strength}</td>
+              <td style="padding: 6px 8px; border: 1px solid #d1d5db; text-align: right;">${csp}</td>
+              <td style="padding: 6px 8px; border: 1px solid #d1d5db; text-align: center; font-weight: bold; color: ${statusColor};">${status}</td>
+            </tr>
+          `;
+          sampleNum++;
+        }
+      });
+
+      table.innerHTML = `
+        <thead>
+          <tr style="background: #f3f4f6; font-weight: bold;">
+            <th style="padding: 8px; border: 1px solid #d1d5db; text-align: center;">Sample #</th>
+            <th style="padding: 8px; border: 1px solid #d1d5db; text-align: center;">Position #</th>
+            <th style="padding: 8px; border: 1px solid #d1d5db; text-align: center;">Weight (g)</th>
+            <th style="padding: 8px; border: 1px solid #d1d5db; text-align: center;">Count (Ne)</th>
+            <th style="padding: 8px; border: 1px solid #d1d5db; text-align: center;">Strength (lbs)</th>
+            <th style="padding: 8px; border: 1px solid #d1d5db; text-align: center;">CSP (Calc)</th>
+            <th style="padding: 8px; border: 1px solid #d1d5db; text-align: center;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tableBodyHTML}
+        </tbody>
+      `;
+      tableDiv.appendChild(table);
+      printTablesContainer.appendChild(tableDiv);
+
+      // Show print view
+      const mainContainer = document.querySelector('.container');
+      const originalDisplay = mainContainer ? mainContainer.style.display : '';
+
+      if (mainContainer) mainContainer.style.display = 'none';
+      printSection.style.cssText = `
+        display:block !important;
+        visibility:visible !important;
+        position:static !important;
+        left:auto !important;
+        top:auto !important;
+        width:100% !important;
+        height:auto !important;
+        background:white !important;
+        z-index:99999 !important;
+        overflow:visible !important;
+        padding:20px !important;
+      `;
+
+      const restore = () => {
+        printSection.style.cssText = 'display:none; position:absolute; left:-9999px; top:0;';
+        if (mainContainer) mainContainer.style.display = originalDisplay || 'block';
+        for (const ch of printChartInstances.values()) ch.destroy();
+        printChartInstances.clear();
+      };
+
+      window.scrollTo(0, 0);
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            try { window.print(); } catch (e) { alert('Print failed. Use Ctrl+P / Cmd+P.'); restore(); return; }
+            const after = () => { restore(); window.removeEventListener('afterprint', after); };
+            window.addEventListener('afterprint', after);
+            setTimeout(restore, 1400);
+          });
+        });
+      }, 600);
     }
 
     function printSelected() {
