@@ -1047,9 +1047,9 @@
   <!-- CONFIGURATION VIEW -->
 
   <!-- CONFIGURATION VIEW -->
-  <!-- RESTORING LOGIN STRUCTURAL DIVS (Safety) -->
-  <div id="loginView" class="container-center" style="display: none !important;"></div>
-  <div id="signupView" class="container-center" style="display: none !important;"></div>
+  <!-- RESTORING LOGIN STRUCTURAL DIVS (Safety) - No classes to prevent overlay issues -->
+  <div id="loginView" style="display: none !important;"></div>
+  <div id="signupView" style="display: none !important;"></div>
 
   <!-- CONFIGURATION VIEW -->
   <div id="configView" class="container" style="display: none;">
@@ -1092,7 +1092,7 @@
 
   <!-- MAIN APP VIEW -->
   <!-- MAIN APP VIEW -->
-  <div id="mainAppView" class="container">
+  <div id="mainAppView" class="container" style="min-height: 100vh; background: white;">
     <div class="header">
       <div style="min-width:180px; color:#7f8c8d; font-weight:600;">SPINWISELY</div>
       <div class="app-title">Count and Skein Strength Test</div>
