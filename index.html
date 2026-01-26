@@ -1434,12 +1434,17 @@
         <thead>
           <tr>
             <th><input type="checkbox" onchange="toggleSelectAll(this)"></th>
-            <th>Date & Time</th>
-            <th>Report #</th>
-            <th>Test Date</th>
-            <th>Operator</th>
-            <th>Targets Entered</th>
-            <th>Product Summary (Avg)</th>
+            <th>Date Time</th>
+            <th>Machine</th>
+            <th>Product</th>
+            <th>Process</th>
+            <th>Lot</th>
+            <th>Count</th>
+            <th>Avg count</th>
+            <th>Count CV%</th>
+            <th>Avg Strength</th>
+            <th>CSP</th>
+            <th>Out of limit</th>
             <th>Details</th>
           </tr>
         </thead>
@@ -2252,9 +2257,18 @@
           operatorName: operator,
           machine,
           product,
+          process, // Captured from selProcess in calculateResults context
+          lotNumber: document.getElementById('selLot')?.value || "Unknown",
           targetCount: count,
           rows: rowsData,
-          metrics: metrics
+          metrics: metrics,
+          // Explicit fields for table rendering
+          avgCount: metrics.avgCount || '-',
+          avgStrength: metrics.avgStrength || '-',
+          avgCSP: metrics.avgCSP || '-',
+          countCV: metrics.countCV || '-',
+          outOfLimitCount: document.getElementById('metrics')?.querySelectorAll('.value')[4]?.textContent?.replace('%', '') || '0.0',
+          testType: 'Count & Strength'
         };
 
         // Save to Local Storage
@@ -3926,31 +3940,37 @@
 
       tbody.innerHTML = '';
       saved.slice().reverse().forEach((test, revIndex) => {
-        // Handle different test types
-        let summary = '';
-        let targetsText = '';
+        const tr = document.createElement('tr');
 
         if (test.testType === 'Count & Strength') {
-          // Count & Strength test - display metrics
-          summary = `Avg Count: ${test.avgCount || 'N/A'}, Avg Strength: ${test.avgStrength || 'N/A'}, Avg CSP: ${test.avgCSP || 'N/A'}`;
-          targetsText = test.yarnCount || 'N/A';
+          tr.innerHTML = `
+            <td><input type="checkbox" onchange="onSavedSelectionChanged()"></td>
+            <td>${escapeHtml(test.dateTime || 'N/A')}</td>
+            <td>${escapeHtml(test.machine || test.machineId || '-')}</td>
+            <td>${escapeHtml(test.product || '-')}</td>
+            <td>${escapeHtml(test.process || '-')}</td>
+            <td>${escapeHtml(test.lotNumber || '-')}</td>
+            <td>${escapeHtml(test.yarnCount || test.targetCount || '-')}</td>
+            <td>${escapeHtml(test.avgCount || '-')}</td>
+            <td>${escapeHtml(test.countCV || '-')}</td>
+            <td>${escapeHtml(test.avgStrength || '-')}</td>
+            <td>${escapeHtml(test.avgCSP || '-')}</td>
+            <td>${escapeHtml(test.outOfLimitCount || '0.0')}%</td>
+            <td><button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${revIndex})">View Details</button></td>
+          `;
         } else {
-          // Sliver/Carding test - use summaryByProduct
-          summary = formatProductSummary(test.summaryByProduct);
-          targetsText = formatTargets(test.targets);
+          // Fallback for Sliver/Carding tests to match 11-column structure (+ checkbox + details)
+          const summary = formatProductSummary(test.summaryByProduct);
+          const targetsText = formatTargets(test.targets);
+          tr.innerHTML = `
+            <td><input type="checkbox" onchange="onSavedSelectionChanged()"></td>
+            <td>${escapeHtml(test.dateTime || 'N/A')}</td>
+            <td colspan="4" style="text-align:left; font-size:11px; color:#666;">Sliver/Carding: ${escapeHtml(summary)}</td>
+            <td>${escapeHtml(targetsText)}</td>
+            <td colspan="5">-</td>
+            <td><button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${revIndex})">View Details</button></td>
+          `;
         }
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-        <td><input type="checkbox" onchange="onSavedSelectionChanged()"></td>
-        <td>${escapeHtml(test.dateTime || 'N/A')}</td>
-        <td>${escapeHtml(test.reportNumber || 'N/A')}</td>
-        <td>${escapeHtml(test.testDate || 'N/A')}</td>
-        <td>${escapeHtml(test.operatorName || 'N/A')}</td>
-        <td style="text-align:left;">${escapeHtml(targetsText)}</td>
-        <td style="text-align:left;">${escapeHtml(summary)}</td>
-        <td><button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${revIndex})">View Details</button></td>
-      `;
         tbody.appendChild(tr);
       });
 
@@ -5510,22 +5530,45 @@
 
         // Summary sheet
         const summaryData = [
-          ['Date & Time', 'Report #', 'Test Date', 'Operator', 'Targets Entered', 'Product Summary (Avg)', 'OOC Cards', 'OOC Coilers']
+          ['Date Time', 'Machine', 'Product', 'Process', 'Lot', 'Count (Target)', 'Avg count', 'Count CV%', 'Avg Strength', 'CSP', 'Out of limit', 'Report #', 'Operator']
         ];
 
         testsToExport.forEach(test => {
-          const summary = formatProductSummary(test.summaryByProduct);
-          const targetsText = formatTargets(test.targets);
-          summaryData.push([
-            test.dateTime || 'N/A',
-            test.reportNumber || 'N/A',
-            test.testDate || 'N/A',
-            test.operatorName || 'N/A',
-            targetsText,
-            summary,
-            test.oocCardsAll || 0,
-            test.oocCoilersAll || 0
-          ]);
+          if (test.testType === 'Count & Strength') {
+            summaryData.push([
+              test.dateTime || 'N/A',
+              test.machine || test.machineId || '-',
+              test.product || '-',
+              test.process || '-',
+              test.lotNumber || '-',
+              test.yarnCount || test.targetCount || '-',
+              test.avgCount || '-',
+              test.countCV || '-',
+              test.avgStrength || '-',
+              test.avgCSP || '-',
+              (test.outOfLimitCount || '0.0') + '%',
+              test.reportNumber || 'N/A',
+              test.operatorName || 'N/A'
+            ]);
+          } else {
+            const summary = formatProductSummary(test.summaryByProduct);
+            const targetsText = formatTargets(test.targets);
+            summaryData.push([
+              test.dateTime || 'N/A',
+              'Sliver',
+              test.product || 'Various',
+              '-',
+              '-',
+              targetsText,
+              '-',
+              '-',
+              '-',
+              '-',
+              (test.oocCardsAll || 0) + '/' + (test.oocCoilersAll || 0),
+              test.reportNumber || 'N/A',
+              test.operatorName || 'N/A'
+            ]);
+          }
         });
 
         const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
