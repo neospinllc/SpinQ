@@ -1035,11 +1035,7 @@
       }
     }
 
-    /* NUCLEAR VISIBILITY OVERRIDE */
-    *:not(script):not(style) {
-      visibility: visible !important;
-      opacity: 1 !important;
-    }
+    /* These two braces were removed as they were extra closing braces */
   </style>
 </head>
 
@@ -1086,8 +1082,8 @@
 
   <!-- CONFIGURATION VIEW -->
   <!-- RESTORING LOGIN STRUCTURAL DIVS (Safety) -->
-  <div id="loginView" class="container-center" style="display: none;"></div>
-  <div id="signupView" class="container-center" style="display: none;"></div>
+  <div id="loginView" class="container-center" style="display: none !important;"></div>
+  <div id="signupView" class="container-center" style="display: none !important;"></div>
 
   <!-- CONFIGURATION REMOVED FOR DEBUGGING -->
 
