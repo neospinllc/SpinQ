@@ -1242,12 +1242,12 @@
       <div style="text-align:center; margin: 14px 0;">
         <button type="button" id="calcBtn" onclick="calculateResults()">Calculate Results</button>
         <button type="button" class="btn-save" id="saveBtn" disabled>Save Test</button>
-        <button type="button" class="btn-print" id="printCurrentBtn" onclick="handlePrintClick('all')">Print
-          Current</button>
+        <button type="button" class="btn-print" id="printCurrentBtn" onclick="handlePrintClick('all')"
+          style="display:none;">Print Current</button>
         <button type="button" class="btn-print" id="printCountOnlyBtn" onclick="handlePrintClick('countOnly')"
-          style="background: #27ae60;">Print Current (Only Count Chart)</button>
+          style="background: #27ae60; display:none;">Print Current (Only Count Chart)</button>
         <button type="button" class="btn-print" id="printNoChartsBtn" onclick="handlePrintClick('noCharts')"
-          style="background: #8e44ad;">Print Current (No Charts)</button>
+          style="background: #8e44ad; display:none;">Print Current (No Charts)</button>
       </div>
 
       <!-- Metrics for Count/Strength -->
@@ -1819,6 +1819,15 @@
 
       // Scroll to test section
       document.getElementById('testSection').scrollIntoView({ behavior: 'smooth' });
+      // Reset saved state when starting new test
+      isCurrentTestSaved = false;
+      isDataCalculated = false;
+      isDataModified = false;
+
+      // Hide print buttons for new test
+      document.getElementById('printCurrentBtn').style.display = 'none';
+      document.getElementById('printCountOnlyBtn').style.display = 'none';
+      document.getElementById('printNoChartsBtn').style.display = 'none';
     }
 
     function resetTable(totalSamples, subsamples) {
@@ -2229,12 +2238,25 @@
         // Update state flags
         isTestSaved = true;
         isDataModified = false; // Reset since we just saved
+        isCurrentTestSaved = true; // Mark current test as saved
 
         // Disable save button until next modification
         const saveBtn = document.getElementById('saveBtn');
         if (saveBtn) saveBtn.disabled = true;
 
-        alert(`Success! Test saved as ${reportNum}.`);
+        // Show print buttons after save
+        document.getElementById('printCurrentBtn').style.display = 'inline-block';
+        document.getElementById('printCountOnlyBtn').style.display = 'inline-block';
+        document.getElementById('printNoChartsBtn').style.display = 'inline-block';
+
+        // Lock all input fields to prevent editing after save
+        document.querySelectorAll('#testTableBody .weight-val, #testTableBody .strength-val').forEach(input => {
+          input.readOnly = true;
+          input.style.backgroundColor = '#f3f4f6';
+          input.style.cursor = 'not-allowed';
+        });
+
+        alert(`Success! Test saved as ${reportNum}. Input fields are now locked. Start a new test to edit data.`);
 
       } catch (e) {
         console.error("Save Test Error:", e);
@@ -2360,8 +2382,8 @@
     let detailsTest = null;
     let hasUnsavedData = false;
     let isDataCalculated = false; // Track if data has been calculated (needs recalculation if changed)
-    let isTestSaved = false; // Track if current test has been saved
-    let isDataModified = false; // Track if data changed after last save/calculate
+    let isDataModified = false; // Track if user has modified data since last calculation
+    let isCurrentTestSaved = false; // Track if current test has been saved saved
     let baseReportNumber = null; // Store base report number for versioning (e.g., "1018")
     let versionSuffix = 0; // Track version number (0 = no suffix, 1 = -1, 2 = -2, etc.)
 
@@ -2555,6 +2577,28 @@
         }
       } catch (_) { }
     }
+
+    // -----------------------------
+    // Unsaved Data Warning
+    // -----------------------------
+    window.addEventListener('beforeunload', function (e) {
+      if (isDataCalculated && !isCurrentTestSaved) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved test data. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    });
+
+    // -----------------------------
+    // Detect Edit Attempts on Locked Fields  
+    // -----------------------------
+    document.addEventListener('click', function (e) {
+      if (isCurrentTestSaved && (e.target.matches('.weight-val') || e.target.matches('.strength-val'))) {
+        if (e.target.readOnly) {
+          alert('This test has been saved and cannot be edited. Please start a new test to enter new data.');
+        }
+      }
+    });
 
     // -----------------------------
     // Init
@@ -5107,7 +5151,7 @@
             setTimeout(restore, 1400);
           });
         });
-      }, 2000); // Increased to 2000ms to ensure charts render
+      }, 800); // Reduced delay now that double-call issue is fixed
     }
 
     function printSelected() {
