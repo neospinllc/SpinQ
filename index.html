@@ -4160,9 +4160,11 @@
 
         // Special handling for reportNumber or date
         if (currentSort.column === 'dateTime') {
-          return currentSort.direction === 'asc'
-            ? new Date(valA.split(',')[0]) - new Date(valB.split(',')[0])
-            : new Date(valB.split(',')[0]) - new Date(valA.split(',')[0]);
+          const dateA = new Date(valA);
+          const dateB = new Date(valB);
+          if (!isNaN(dateA) && !isNaN(dateB)) {
+            return currentSort.direction === 'asc' ? dateA - dateB : dateB - dateA;
+          }
         }
 
         if (isFinite(valA) && isFinite(valB)) {
