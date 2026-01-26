@@ -6109,8 +6109,14 @@
         targetInput.style.backgroundColor = "#d1fae5";
         setTimeout(() => targetInput.style.backgroundColor = "", 500);
 
-        // Move focus to next input? Optional.
-        // For now, keep focus or move to strength?
+        // Auto-advance to next input
+        const allWeights = Array.from(document.querySelectorAll('.weight-val'));
+        const currentIndex = allWeights.indexOf(targetInput);
+        if (currentIndex !== -1 && currentIndex < allWeights.length - 1) {
+          const nextInput = allWeights[currentIndex + 1];
+          nextInput.focus();
+          setActiveInput(nextInput); // Ensure next reading goes here
+        }
       }
     }
   </script>
