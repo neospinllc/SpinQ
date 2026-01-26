@@ -4043,7 +4043,10 @@
       const product = document.getElementById('srchProduct').value;
       const process = document.getElementById('srchProcess').value;
 
-      filteredTests = saved.filter(test => {
+      filteredTests = saved.map((t, i) => {
+        t.__origIdx = i; // Store original index
+        return t;
+      }).filter(test => {
         // Date Logic
         if (dateType !== 'all') {
           let dateFrom, dateTo;
@@ -4139,11 +4142,19 @@
       updateSortIcons();
 
       displayData.forEach((test, idx) => {
-        const originalIndex = saved.indexOf(test);
+        // Robust way to get original index even after filtering/re-parsing
+        const originalIndex = (test.__origIdx !== undefined) ? test.__origIdx : saved.indexOf(test);
+
+        // If still -1, try to find by content (failsafe)
+        let finalIdx = originalIndex;
+        if (finalIdx === -1) {
+          finalIdx = saved.findIndex(s => s.dateTime === test.dateTime && s.reportNumber === test.reportNumber);
+        }
+
         const tr = document.createElement('tr');
-        tr.id = 'report-row-' + originalIndex;
+        tr.id = 'report-row-' + finalIdx;
         tr.setAttribute('data-lot', test.lotNumber || 'Unknown');
-        tr.setAttribute('data-original-index', originalIndex);
+        tr.setAttribute('data-original-index', finalIdx);
 
         if (test.testType === 'Count & Strength') {
           tr.innerHTML = `
@@ -5703,97 +5714,97 @@
     let combinedChartInstances = new Map();
 
     function viewCombinedData() {
-      const indices = getSelectedSavedIndices();
-      if (indices.length < 2) return;
-      const saved = getSavedTests();
-      const selectedTests = indices.map(i => saved[i]).filter(Boolean);
-
       const panel = document.getElementById('combinedDetailsPanel');
-      panel.style.display = 'block';
-      panel.scrollIntoView({ behavior: 'smooth' });
-
-      // Helper to parse values with unit prefixes like "Ne 30"
-      const parseVal = (v) => {
-        if (v === null || v === undefined || v === '-') return NaN;
-        const s = String(v).replace(/[^\d.-]/g, '');
-        return s ? parseFloat(s) : NaN;
-      };
-
-      // Calculations
-      let allAvgs = [];
-      let allSingles = [];
-      let allCSPs = [];
-      let oocTests = 0;
-      let oocSingles = 0;
-
-      // Use target/limits from first test
-      const ref = selectedTests[0];
-      const target = parseVal(ref.yarnCount || ref.targetCount);
-      let lcl = parseVal(ref.lcl);
-      let ucl = parseVal(ref.ucl);
-
-      // Fallback limits if missing
-      if (isNaN(lcl) || isNaN(ucl)) {
-        const refAvg = parseVal(ref.avgCount || ref.metrics?.avgCount);
-        if (!isNaN(refAvg)) {
-          const lims = limitsFromMean(refAvg, 2.5);
-          lcl = isNaN(lcl) ? lims.lcl : lcl;
-          ucl = isNaN(ucl) ? lims.ucl : ucl;
-        }
-      }
-
-      selectedTests.forEach(test => {
-        const avg = parseVal(test.avgCount || test.metrics?.avgCount);
-        if (!isNaN(avg)) {
-          allAvgs.push(avg);
-          if (!isNaN(lcl) && !isNaN(ucl)) {
-            if (avg < lcl || avg > ucl) oocTests++;
-          }
-        }
-
-        // Extraction of single values
-        const testSingles = [];
-        if (test.rawData && test.rawData.counts) {
-          testSingles.push(...test.rawData.counts.map(c => parseVal(c)));
-        } else if (test.rows) {
-          testSingles.push(...test.rows.map(r => parseVal(r.count)));
-        } else if (test.cardRows) {
-          test.cardRows.forEach(r => {
-            if (r.coilers) testSingles.push(...r.coilers.map(v => parseVal(v)));
-          });
-        }
-
-        testSingles.filter(v => !isNaN(v)).forEach(val => {
-          allSingles.push(val);
-          if (!isNaN(lcl) && !isNaN(ucl)) {
-            if (val < lcl || val > ucl) oocSingles++;
-          }
-        });
-
-        const csp = parseVal(test.avgCSP || test.metrics?.avgCSP);
-        if (!isNaN(csp)) allCSPs.push(csp);
-      });
-
-      const avgOfAvgsVal = allAvgs.length > 0 ? (allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length) : NaN;
-      const avgOfAvgs = !isNaN(avgOfAvgsVal) ? avgOfAvgsVal.toFixed(2) : '-';
-      const avgCSPVal = allCSPs.length > 0 ? (allCSPs.reduce((a, b) => a + b, 0) / allCSPs.length) : NaN;
-      const avgCSP = !isNaN(avgCSPVal) ? avgCSPVal.toFixed(0) : '-';
-
-      // Global CV calculation
-      let globalCV = '-';
-      if (allSingles.length > 1) {
-        const mean = allSingles.reduce((a, b) => a + b, 0) / allSingles.length;
-        if (mean > 0) {
-          const variance = allSingles.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / (allSingles.length - 1);
-          globalCV = ((Math.sqrt(variance) / mean) * 100).toFixed(2);
-        }
-      }
-
-      // Render Metrics
       const metricsDiv = document.getElementById('combinedMetrics');
-      if (!metricsDiv) return;
 
       try {
+        const indices = getSelectedSavedIndices();
+        const saved = getSavedTests();
+        const selectedTests = indices.map(i => saved[i]).filter(Boolean);
+
+        if (selectedTests.length < 2) {
+          alert("Please select at least 2 tests for combined analysis.");
+          return;
+        }
+
+        panel.style.display = 'block';
+        panel.scrollIntoView({ behavior: 'smooth' });
+
+        // Helper to parse values with unit prefixes
+        const parseVal = (v) => {
+          if (v === null || v === undefined || v === '-') return NaN;
+          const s = String(v).replace(/[^\d.-]/g, '');
+          return s ? parseFloat(s) : NaN;
+        };
+
+        // Calculations
+        let allAvgs = [];
+        let allSingles = [];
+        let allCSPs = [];
+        let oocTests = 0;
+        let oocSingles = 0;
+
+        const ref = selectedTests[0];
+        const target = parseVal(ref.yarnCount || ref.targetCount);
+        let lcl = parseVal(ref.lcl);
+        let ucl = parseVal(ref.ucl);
+
+        if (isNaN(lcl) || isNaN(ucl)) {
+          const refAvg = parseVal(ref.avgCount || ref.metrics?.avgCount);
+          if (!isNaN(refAvg)) {
+            const lims = limitsFromMean(refAvg, 2.5);
+            lcl = isNaN(lcl) ? lims.lcl : lcl;
+            ucl = isNaN(ucl) ? lims.ucl : ucl;
+          }
+        }
+
+        selectedTests.forEach(test => {
+          const avg = parseVal(test.avgCount || test.metrics?.avgCount);
+          if (!isNaN(avg)) {
+            allAvgs.push(avg);
+            if (!isNaN(lcl) && !isNaN(ucl)) {
+              if (avg < lcl || avg > ucl) oocTests++;
+            }
+          }
+
+          const testSingles = [];
+          if (test.rawData && test.rawData.counts) {
+            testSingles.push(...test.rawData.counts.map(c => parseVal(c)));
+          } else if (test.rows) {
+            testSingles.push(...test.rows.map(r => parseVal(r.count)));
+          } else if (test.cardRows) {
+            test.cardRows.forEach(r => {
+              if (r.coilers) testSingles.push(...r.coilers.map(v => parseVal(v)));
+            });
+          }
+
+          testSingles.filter(v => !isNaN(v)).forEach(val => {
+            allSingles.push(val);
+            if (!isNaN(lcl) && !isNaN(ucl)) {
+              if (val < lcl || val > ucl) oocSingles++;
+            }
+          });
+
+          const csp = parseVal(test.avgCSP || test.metrics?.avgCSP);
+          if (!isNaN(csp)) allCSPs.push(csp);
+        });
+
+        const avgOfAvgsVal = allAvgs.length > 0 ? (allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length) : NaN;
+        const avgOfAvgs = !isNaN(avgOfAvgsVal) ? avgOfAvgsVal.toFixed(2) : '-';
+        const avgCSPVal = allCSPs.length > 0 ? (allCSPs.reduce((a, b) => a + b, 0) / allCSPs.length) : NaN;
+        const avgCSP = !isNaN(avgCSPVal) ? avgCSPVal.toFixed(0) : '-';
+
+        let globalCV = '-';
+        if (allSingles.length > 1) {
+          const mean = allSingles.reduce((a, b) => a + b, 0) / allSingles.length;
+          if (mean > 0) {
+            const variance = allSingles.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / (allSingles.length - 1);
+            globalCV = ((Math.sqrt(variance) / mean) * 100).toFixed(2);
+          }
+        }
+
+        if (!metricsDiv) return;
+
         const avgOfAvgsNum = parseFloat(avgOfAvgs);
         const avgOfAvgsStyle = (!isNaN(avgOfAvgsNum) && !isNaN(lcl) && !isNaN(ucl) && (avgOfAvgsNum < lcl || avgOfAvgsNum > ucl))
           ? 'background:#ef4444;' : 'background:#3498db;';
@@ -5852,15 +5863,21 @@
               plotDistribution(avgChartId, allAvgs, parseFloat(avgOfAvgs), lcl, ucl, 'Averages Distribution', combinedChartInstances, target);
             }
             if (allSingles.length > 0) {
-              plotDistribution(singleChartId, allSingles, parseFloat(avgOfAvgs), lcl, ucl, 'All Singles Distribution', combinedChartInstances, target);
+              plotDistribution(singleChartId, allSingles, parseFloat(avgOfAvgs), lcl, ucl, 'Single Values Distribution', combinedChartInstances, target);
             }
           } catch (chartErr) {
-            console.error("Combined chart error:", chartErr);
+            console.error("Combined Chart Rendering Error:", chartErr);
           }
-        }, 100);
+        }, 50);
+
       } catch (err) {
-        console.error("Combined metrics error:", err);
-        metricsDiv.innerHTML = '<div style="grid-column: 1/-1; padding: 20px; color: #ef4444;">Error processing combined data analysis.</div>';
+        console.error("Combined analysis failed:", err);
+        if (metricsDiv) {
+          metricsDiv.innerHTML = `<div style="grid-column: 1/-1; color: #ef4444; padding: 20px; text-align: center; border: 1px solid #ef4444; border-radius: 8px;">
+            <strong>Error loading combined analysis:</strong> ${err.message}<br>
+            Please check the console for details.
+          </div>`;
+        }
       }
     }
 
