@@ -1348,6 +1348,8 @@
       <div class="action-row">
         <button class="btn-danger" onclick="deleteSelected()" id="deleteBtn" style="display:none;">Delete
           Selected</button>
+        <button class="btn-muted" onclick="clearSavedSelection()" id="clearSelectionBtn"
+          style="display:none; margin-left: 10px;">Clear Selection</button>
 
         <button class="btn-start" onclick="viewCombinedData()" id="viewCombinedBtn"
           style="display:none; background:#3498db;">View Combined Data</button>
@@ -2454,20 +2456,34 @@
 
       const anyChecked = selected.length > 0;
       const multipleChecked = selected.length > 1;
+
       const deleteBtn = document.getElementById('deleteBtn');
+      const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+      const viewCombinedBtn = document.getElementById('viewCombinedBtn');
+
       if (deleteBtn) deleteBtn.style.display = anyChecked ? 'inline-block' : 'none';
+      if (clearSelectionBtn) clearSelectionBtn.style.display = anyChecked ? 'inline-block' : 'none';
       if (viewCombinedBtn) viewCombinedBtn.style.display = multipleChecked ? 'inline-block' : 'none';
 
       // Sync header checkbox
-      const headerCB = document.getElementById('selectAllHeader');
-      if (headerCB) {
-        const checkboxes = document.querySelectorAll('#savedList input[type="checkbox"]');
-        if (checkboxes.length > 0) {
-          headerCB.checked = Array.from(checkboxes).every(cb => cb.checked);
-        } else {
-          headerCB.checked = false;
-        }
+      const headerCb = document.getElementById('selectAllHeader');
+      if (headerCb) {
+        const visibleCheckboxes = Array.from(document.querySelectorAll('#savedTable tbody input[type="checkbox"]'));
+        const allVisibleChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.every(cb => cb.checked);
+        headerCb.checked = allVisibleChecked;
+        headerCb.indeterminate = anyChecked && !allVisibleChecked;
       }
+    }
+
+    function clearSavedSelection() {
+      const checkboxes = document.querySelectorAll('#savedTable tbody input[type="checkbox"]');
+      checkboxes.forEach(cb => cb.checked = false);
+      const headerCb = document.getElementById('selectAllHeader');
+      if (headerCb) {
+        headerCb.checked = false;
+        headerCb.indeterminate = false;
+      }
+      onSavedSelectionChanged();
     }
 
     function toggleSelectAll(master) {
@@ -4504,7 +4520,16 @@
     }
 
     function openDetails(test, revIndex) {
-      detailsTest = test;
+      // PERMANENCE FIX: Deep clone the test object so it persists even if the original list changes
+      try {
+        detailsTest = JSON.parse(JSON.stringify(test));
+      } catch (e) {
+        console.error('Deep clone failed, falling back to reference', e);
+        detailsTest = test;
+      }
+
+      console.log('openDetails called with test:', test);
+      console.log('detailsTest set to:', detailsTest);
 
       // Close any already open details
       closeDetails();
