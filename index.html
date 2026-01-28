@@ -2174,19 +2174,9 @@
       }
 
       // CRITICAL: Verify that there are actual samples (prevent empty saves)
-      console.log("DEBUG Save Validation:", {
-        currentTestExists: !!currentTest,
-        sampleCount: currentTest?.sampleCount,
-        testType: currentTest?.testType,
-        avgCount: currentTest?.avgCount
-      });
-
       if (!currentTest.sampleCount || currentTest.sampleCount === 0) {
-        console.error("BLOCKED SAVE: sampleCount is zero or missing!");
         return alert("Cannot save: No samples detected. Please enter weight values in the data entry form before saving.");
       }
-
-      console.log("✓ Sample count validation passed:", currentTest.sampleCount, "samples");
 
       // Check if this is a count-only test (no strength data)
       const hasCountOnlyData = currentTest.testType === 'Count Only';
@@ -2585,42 +2575,7 @@
     }
 
     // -----------------------------
-    // Persistent Product Configs & Card Logic
-    // -----------------------------
-    // IDs of inputs to persist
-    const PRODUCT_INPUT_IDS = [
-      't_qtip', 'r_qtip', 'c_qtip',
-      't_triple', 'r_triple', 'c_triple',
-      't_organic', 'r_organic', 'c_organic',
-      't_special', 'r_special', 'c_special',
-      't_custom_name', 't_custom', 'r_custom', 'c_custom'
-    ];
 
-    function saveProductConfigs() {
-      const data = {};
-      PRODUCT_INPUT_IDS.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) data[id] = el.value;
-      });
-      try {
-        localStorage.setItem('sliverProductConfigs', JSON.stringify(data));
-      } catch (_) { }
-    }
-
-    function loadProductConfigs() {
-      try {
-        const stored = localStorage.getItem('sliverProductConfigs');
-        if (stored) {
-          const data = JSON.parse(stored);
-          PRODUCT_INPUT_IDS.forEach(id => {
-            if (data[id] !== undefined) {
-              const el = document.getElementById(id);
-              if (el) el.value = data[id];
-            }
-          });
-        }
-      } catch (_) { }
-    }
 
     // Parses "1-3, 5, 8-10" into [1, 2, 3, 5, 8, 9, 10]
     function parseCardRange(str) {
@@ -2722,6 +2677,8 @@
       } catch (_) { }
     }
 
+
+
     // -----------------------------
     // Unsaved Data Warning
     // -----------------------------
@@ -2752,8 +2709,10 @@
       initDefaults();
       // On load, apply any existing config (target, range etc.)
       try {
-        loadProductConfigs(); // Load saved targets & card ranges
-        loadOperatorHistory(); // Load operator defaults
+        // loadProductConfigs(); // REMOVED - dead code
+        if (typeof loadOperatorHistory === 'function') {
+          loadOperatorHistory(); // Load operator defaults
+        }
 
         // Attach button listeners
         const calcBtn = document.getElementById('calcBtn');
@@ -2986,65 +2945,7 @@
     }
 
 
-    function startNewSliverTest() {  // Renamed from startNewTest - for Sliver/Carding module
-      // Check if there's any unsaved data
-      const hasData = cardRows && cardRows.length > 0 &&
-        cardRows.some(r => (r.coilers || []).some(v => v !== null && isFinite(v)));
 
-      if (hasData || hasUnsavedData) {
-        const confirmMessage = 'Warning: All unsaved data will be lost.\\n\\nDo you want to start a new test?';
-        if (!confirm(confirmMessage)) {
-          return; // User cancelled
-        }
-      }
-
-      // Reset all form fields
-      // No product-specific input resets in Count & Skein Strength module
-
-      // Reset operator name (do NOT reset if we want persistent default, but "Start New Test" implies fresh canvas)
-      // Requirement: "last entered operator name should come as default when the page loaded next time"
-      // Usually "Start New Test" clears everything for a fresh start. 
-      // If user wants to keep operator, they can select from dropdown.
-      // Let's clear it, but the autofill happens on page load.
-      document.getElementById('operatorName').value = '';
-
-      // Reset test date to today
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      const todayStr = `${yyyy}-${mm}-${dd}`;
-      document.getElementById('testDate').value = todayStr;
-
-      // Get next report number
-      let reportCounter = getReportCounter();
-      reportCounter++;
-      setReportCounter(reportCounter);
-      document.getElementById('reportNumber').value = reportCounter;
-
-      // Hide test section
-      document.getElementById('testSection').style.display = 'none';
-
-      // Reset all state variables
-      cardRows = [];
-      currentTest = null;
-      hasUnsavedData = false;
-      isDataCalculated = false;
-      isTestSaved = false;
-
-      // Reset buttons - COMMENTED OUT FOR ALWAYS-VISIBLE REQUIREMENT
-      // document.getElementById('saveBtn').style.display = 'none';
-      // document.getElementById('printCurrentBtn').style.display = 'none';
-
-      // Clear charts
-      destroyChartMap(chartInstances, 'chartsGrid');
-
-      // Hide metrics
-      document.getElementById('metrics').style.display = 'none';
-
-      // Clear error banner
-      document.getElementById('errorBanner').style.display = 'none';
-    }
 
     function startEntry() {
       // Get assignments from inputs
