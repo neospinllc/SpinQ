@@ -4025,7 +4025,7 @@
         tr.setAttribute('data-lot', test.lotNumber || 'Unknown');
         tr.setAttribute('data-original-index', finalIdx);
 
-        if (test.testType === 'Count & Strength') {
+        if (test.testType === 'Count & Strength' || test.testType === 'Count Only') {
           tr.innerHTML = `
             <td><input type="checkbox" onchange="onSavedSelectionChanged(this)"></td>
             <td>${escapeHtml(test.dateTime || 'N/A')}</td>
@@ -4510,7 +4510,7 @@
       // Insert after parent row
       parentRow.parentNode.insertBefore(detailRow, parentRow.nextSibling);
 
-      const isCountStrength = test.testType === 'Count & Strength';
+      const isCountStrength = (test.testType === 'Count & Strength' || test.testType === 'Count Only');
 
       if (isCountStrength) {
         // --- Count & Strength Details ---
@@ -5221,7 +5221,7 @@
         ];
 
         testsToExport.forEach(test => {
-          if (test.testType === 'Count & Strength') {
+          if (test.testType === 'Count & Strength' || test.testType === 'Count Only') {
             const isLegacy = !test.hasOwnProperty('process');
             let machineVal = test.machine || test.machineId || (isLegacy ? (test.testDate || '-') : '-');
             let productVal = test.product || (isLegacy ? (test.operatorName || '-') : '-');
