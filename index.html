@@ -2472,7 +2472,7 @@
       // Sync header checkbox
       const headerCb = document.getElementById('selectAllHeader');
       if (headerCb) {
-        const visibleCheckboxes = Array.from(document.querySelectorAll('#savedTable tbody input[type="checkbox"]'));
+        const visibleCheckboxes = Array.from(document.querySelectorAll('#savedTable tbody input[type="checkbox"]:not(:disabled)'));
         const allVisibleChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.every(cb => cb.checked);
         headerCb.checked = allVisibleChecked;
         headerCb.indeterminate = anyChecked && !allVisibleChecked;
@@ -2491,13 +2491,17 @@
     }
 
     function toggleSelectAll(master) {
-      const checkboxes = document.querySelectorAll('#savedList input[type="checkbox"]');
-      checkboxes.forEach(cb => cb.checked = master.checked);
+      const checkboxes = document.querySelectorAll('#savedTable tbody input[type="checkbox"]');
+      checkboxes.forEach(cb => {
+        if (!cb.disabled) {
+          cb.checked = master.checked;
+        }
+      });
       onSavedSelectionChanged();
     }
 
     function getSelectedSavedIndices() {
-      const checkboxes = document.querySelectorAll('#savedList input[type="checkbox"]:checked');
+      const checkboxes = document.querySelectorAll('#savedTable tbody input[type="checkbox"]:checked');
       const selected = [];
       checkboxes.forEach(cb => {
         const row = cb.closest('tr');
