@@ -1443,6 +1443,40 @@
       </div>
     </div>
 
+    <!-- Edit Report Modal -->
+    <div id="editReportModal" class="modal-overlay">
+      <div class="modal-box" style="width: 400px;">
+        <div class="modal-title">Edit Report Details</div>
+        <div class="modal-message" style="text-align:left;">
+          <div class="input-card" style="margin-bottom:10px;">
+            <label class="form-label">Machine</label>
+            <select id="editMachine" class="card-input"></select>
+          </div>
+          <div class="input-card" style="margin-bottom:10px;">
+            <label class="form-label">Product</label>
+            <select id="editProduct" class="card-input"></select>
+          </div>
+          <div class="input-card" style="margin-bottom:10px;">
+            <label class="form-label">Process</label>
+            <select id="editProcess" class="card-input"></select>
+          </div>
+          <div class="input-card" style="margin-bottom:10px;">
+            <label class="form-label">Lot Number</label>
+            <select id="editLot" class="card-input"></select>
+          </div>
+          <div class="input-card" style="margin-bottom:10px;">
+            <label class="form-label">Yarn Count</label>
+            <select id="editCount" class="card-input"></select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-modal-cancel"
+            onclick="document.getElementById('editReportModal').style.display='none'">Cancel</button>
+          <button type="button" class="btn-modal-confirm" onclick="saveEditedReport()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- PRINT SECTION -->
