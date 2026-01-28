@@ -204,18 +204,6 @@
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
     }
 
-    .product-qtip {
-      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-    }
-
-    .product-triple {
-      background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
-    }
-
-    .product-organic {
-      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-    }
-
     .product-special {
       background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
     }
@@ -232,14 +220,6 @@
       font-size: 16px;
       font-weight: 700;
       color: #1a237e;
-    }
-
-    .product-triple .product-name {
-      color: #4a148c;
-    }
-
-    .product-organic .product-name {
-      color: #1b5e20;
     }
 
     .product-special .product-name {
@@ -279,18 +259,6 @@
     }
 
     /* Product row colors in data entry table */
-    .row-qtip {
-      background-color: #e3f2fd !important;
-    }
-
-    .row-triple {
-      background-color: #f3e5f5 !important;
-    }
-
-    .row-organic {
-      background-color: #e8f5e9 !important;
-    }
-
     .row-special {
       background-color: #fff3e0 !important;
     }
@@ -2577,7 +2545,7 @@
     // -----------------------------
     const TOTAL_CARDS = 15;
     const COILERS_PER_CARD = 4;
-    const PRODUCT_OPTIONS_BASE = ["Q tip", "Triple", "Organic", "Special"];
+    const PRODUCT_OPTIONS_BASE = ["Special"];
     const PRODUCT_DEFAULT = "";
 
     function getProductOptions() {
@@ -2592,9 +2560,6 @@
 
     function getProductColorClass(productName) {
       const name = (productName || '').toLowerCase().trim();
-      if (name === 'q tip' || name === 'qtip') return 'qtip';
-      if (name === 'triple') return 'triple';
-      if (name === 'organic') return 'organic';
       if (name === 'special') return 'special';
       return 'custom';
     }
@@ -2740,9 +2705,6 @@
         }
       }
 
-      processProduct(null, 't_qtip', 'r_qtip', 'c_qtip', 'Q tip');
-      processProduct(null, 't_triple', 'r_triple', 'c_triple', 'Triple');
-      processProduct(null, 't_organic', 'r_organic', 'c_organic', 'Organic');
       processProduct(null, 't_special', 'r_special', 'c_special', 'Special');
       processProduct('t_custom_name', 't_custom', 'r_custom', 'c_custom', 'Custom Product');
 
@@ -2918,9 +2880,6 @@
     // -----------------------------
     function getTargets() {
       const map = {
-        "Q tip": parseFloat(document.getElementById('t_qtip').value),
-        "Triple": parseFloat(document.getElementById('t_triple').value),
-        "Organic": parseFloat(document.getElementById('t_organic').value),
         "Special": parseFloat(document.getElementById('t_special').value)
       };
       const out = {};
@@ -2939,9 +2898,6 @@
 
     function getAcceptableRanges() {
       const ranges = {
-        "Q tip": parseFloat(document.getElementById('r_qtip')?.value || '5.0'),
-        "Triple": parseFloat(document.getElementById('r_triple')?.value || '5.0'),
-        "Organic": parseFloat(document.getElementById('r_organic')?.value || '5.0'),
         "Special": parseFloat(document.getElementById('r_special')?.value || '5.0')
       };
       // Validate ranges
@@ -3008,9 +2964,6 @@
       const overlaps = new Set();
 
       const productInputs = [
-        { id: 'c_qtip', name: 'Q tip' },
-        { id: 'c_triple', name: 'Triple' },
-        { id: 'c_organic', name: 'Organic' },
         { id: 'c_special', name: 'Special' },
         { id: 'c_custom', name: 'Custom Product' }
       ];
@@ -3104,17 +3057,11 @@
 
       // Reset all form fields
       // Reset targets
-      document.getElementById('t_qtip').value = '';
-      document.getElementById('t_triple').value = '';
-      document.getElementById('t_organic').value = '';
       document.getElementById('t_special').value = '';
       document.getElementById('t_custom').value = '';
       document.getElementById('t_custom_name').value = '';
 
       // Reset acceptable ranges to default (5.0)
-      document.getElementById('r_qtip').value = '5.0';
-      document.getElementById('r_triple').value = '5.0';
-      document.getElementById('r_organic').value = '5.0';
       document.getElementById('r_special').value = '5.0';
       document.getElementById('r_custom').value = '5.0';
 
@@ -3270,7 +3217,7 @@
 
       // Remove all product color classes
       if (tr) {
-        tr.classList.remove('row-qtip', 'row-triple', 'row-organic', 'row-special', 'row-custom');
+        tr.classList.remove('row-special', 'row-custom');
         // Add appropriate color class based on product
         if (product) {
           const colorClass = getProductColorClass(product);
