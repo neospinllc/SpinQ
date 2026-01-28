@@ -2231,8 +2231,13 @@
         }
       }
 
+      // Verify that currentTest was properly populated by calculateResults
+      if (!currentTest || !currentTest.testType) {
+        return alert("Cannot save: No valid test data calculated. Please ensure you have entered weight values.");
+      }
+
       // Check if this is a count-only test (no strength data)
-      const hasCountOnlyData = currentTest && currentTest.testType === 'Count Only';
+      const hasCountOnlyData = currentTest.testType === 'Count Only';
 
       if (hasCountOnlyData) {
         // Create custom confirmation dialog
@@ -2241,7 +2246,7 @@
           "• Click OK to save with count data only\n" +
           "• Click Cancel to go back and add strength values"
         );
-        
+
         if (!confirmCountOnly) {
           // User wants to add strength data - return to data entry
           return;
