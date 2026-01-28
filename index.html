@@ -2031,8 +2031,10 @@
 
         // Need at least some data
         if (n === 0 && nCountOnly === 0) {
-          if (!silent) alert("No valid data entered. Please enter Weight values.");
-          return;
+          if (!silent) {
+            alert("No valid data entered. Please enter Weight values.");
+          }
+          return; // Silently exit without alert during auto-calc
         }
 
         let avgCount, avgStrength, avgCSP, countCV;
@@ -2229,6 +2231,23 @@
         }
       }
 
+      // Check if this is a count-only test (no strength data)
+      const hasCountOnlyData = currentTest && currentTest.testType === 'Count Only';
+
+      if (hasCountOnlyData) {
+        // Create custom confirmation dialog
+        const confirmCountOnly = confirm(
+          "No strength data detected. Do you want to proceed with Count Test only?\n\n" +
+          "• Click OK to save with count data only\n" +
+          "• Click Cancel to go back and add strength values"
+        );
+        
+        if (!confirmCountOnly) {
+          // User wants to add strength data - return to data entry
+          return;
+        }
+      }
+
       try {
         let reportNum = document.getElementById('reportNumber').value;
         const operator = document.getElementById('operatorName')?.value || "Unknown";
@@ -2310,7 +2329,7 @@
           avgCSP: metrics.avgCSP || '-',
           countCV: metrics.countCV || '-',
           outOfLimitCount: document.getElementById('metrics')?.querySelectorAll('.value')[4]?.textContent?.replace('%', '') || '0.0',
-          testType: 'Count & Strength',
+          testType: currentTest?.testType || 'Count & Strength',
           rawData: (typeof currentTest !== 'undefined' && currentTest.rawData) ? JSON.parse(JSON.stringify(currentTest.rawData)) : null,
           rangePercent: (typeof currentTest !== 'undefined') ? currentTest.rangePercent : 2.5,
           lcl: (typeof currentTest !== 'undefined') ? currentTest.lcl : null,
