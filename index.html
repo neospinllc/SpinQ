@@ -4917,8 +4917,19 @@
           ${tableBodyHTML}
         </tbody>
       `;
+      // Page Break Prevention
+      tableDiv.style.breakInside = 'avoid';
+      tableDiv.style.pageBreakInside = 'avoid';
+      if (printChartsContainer) {
+        printChartsContainer.style.breakInside = 'avoid';
+        printChartsContainer.style.pageBreakInside = 'avoid';
+      }
+
       tableDiv.appendChild(table);
-      printTablesContainer.appendChild(tableDiv);
+
+      // CRITICAL: Append to printSection directly so it appears AFTER printChartsContainer
+      // (printTablesContainer is now visually ABOVE printChartsContainer due to previous fix)
+      printSection.appendChild(tableDiv);
 
       // Show print view
       const mainContainer = document.querySelector('.container');
@@ -4945,6 +4956,11 @@
         if (mainContainer) mainContainer.style.display = originalDisplay || 'block';
         for (const ch of printChartInstances.values()) ch.destroy();
         printChartInstances.clear();
+
+        // Remove the appended table div to prevent duplication
+        if (tableDiv && tableDiv.parentNode) {
+          tableDiv.parentNode.removeChild(tableDiv);
+        }
       };
 
       window.scrollTo(0, 0);
