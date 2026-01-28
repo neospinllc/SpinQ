@@ -1348,8 +1348,7 @@
       <div class="action-row">
         <button class="btn-danger" onclick="deleteSelected()" id="deleteBtn" style="display:none;">Delete
           Selected</button>
-        <button class="btn-print" onclick="printSelected()" id="printSelectedBtn" style="display:none;">Print Selected
-          (Combined)</button>
+
         <button class="btn-start" onclick="viewCombinedData()" id="viewCombinedBtn"
           style="display:none; background:#3498db;">View Combined Data</button>
         <button class="btn-save" onclick="exportToExcel()" id="exportExcelBtn"
@@ -2456,11 +2455,7 @@
       const anyChecked = selected.length > 0;
       const multipleChecked = selected.length > 1;
       const deleteBtn = document.getElementById('deleteBtn');
-      const printSelectedBtn = document.getElementById('printSelectedBtn');
-      const viewCombinedBtn = document.getElementById('viewCombinedBtn');
-
       if (deleteBtn) deleteBtn.style.display = anyChecked ? 'inline-block' : 'none';
-      if (printSelectedBtn) printSelectedBtn.style.display = anyChecked ? 'inline-block' : 'none';
       if (viewCombinedBtn) viewCombinedBtn.style.display = multipleChecked ? 'inline-block' : 'none';
 
       // Sync header checkbox
@@ -4707,8 +4702,17 @@
     // Printing (multi-page, per product breaks)
     // -----------------------------
     function printDetails() {
-      if (!detailsTest) return;
+      console.log('printDetails called', detailsTest);
+      if (!detailsTest) {
+        console.error('No detailsTest found to print.');
+        return alert("Error: No report selected to print.");
+      }
+
+      // Safety: Should not happen, but if isPrinting is stuck, warn or reset? 
+      // For now, let's rely on the called functions, but log intent.
+
       if (detailsTest.testType === 'Count & Strength' || detailsTest.rawData) {
+        // Ensure we are not silently blocked
         printCountStrengthTest(detailsTest, 'all');
       } else {
         printFromTests([detailsTest], `Saved Report ${detailsTest.reportNumber}`);
@@ -4978,18 +4982,7 @@
       }, 800); // Reduced delay now that double-call issue is fixed
     }
 
-    function printSelected() {
-      const indices = getSelectedSavedIndices();
-      if (indices.length === 0) { alert('Please select at least one saved test.'); return; }
-      const saved = getSavedTests();
-      const selectedTests = indices.map(i => saved[i]).filter(Boolean);
 
-      if (selectedTests.length === 1 && (selectedTests[0].testType === 'Count & Strength' || selectedTests[0].rawData)) {
-        printCountStrengthTest(selectedTests[0], 'all');
-      } else {
-        printFromTests(selectedTests, `Selected Tests (${selectedTests.length})`);
-      }
-    }
 
     function printFromTests(tests, modeLabel) {
       const printSection = document.getElementById('printSection');
