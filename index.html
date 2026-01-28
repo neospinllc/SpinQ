@@ -2515,10 +2515,14 @@
       if (!confirm('Are you sure you want to delete the selected tests?')) return;
 
       const saved = getSavedTests();
-      const selectedSet = new Set(selectedIndices);
-      const kept = saved.filter((_, idx) => !selectedSet.has(idx));
+      // SOFT DELETE: Mark as deleted instead of removing
+      selectedIndices.forEach(idx => {
+        if (saved[idx]) saved[idx].deleted = true;
+      });
 
-      localStorage.setItem('spinQ_countStrengthTests', JSON.stringify(kept));
+      localStorage.setItem('spinQ_countStrengthTests', JSON.stringify(saved));
+      // Clear selection to avoid confusion
+      clearSavedSelection();
       renderSavedTests();
       if (typeof closeDetails === 'function') closeDetails();
     }
@@ -2975,6 +2979,12 @@
     }
 
     function validateAndSimulate() {
+      // PIN Protection
+      const code = prompt("Enter Simulation Access Code:");
+      if (code !== '4321') {
+        return alert("Error: Invalid Access Code.");
+      }
+
       const machine = document.getElementById('selMachine').value;
       const product = document.getElementById('selProduct').value;
       const countStr = document.getElementById('selCount').value;
@@ -4088,9 +4098,24 @@
         tr.setAttribute('data-lot', test.lotNumber || 'Unknown');
         tr.setAttribute('data-original-index', finalIdx);
 
+        const isDeleted = !!test.deleted;
+        const opacity = isDeleted ? '0.5' : '1';
+        const bg = isDeleted ? '#f3f4f6' : '';
+        tr.style.opacity = opacity;
+        tr.style.backgroundColor = bg;
+
         if (test.testType === 'Count & Strength' || test.testType === 'Count Only') {
+          // If deleted: Checkbox disabled, Button disabled/changed text
+          const checkboxHtml = isDeleted
+            ? `<input type="checkbox" disabled>`
+            : `<input type="checkbox" onchange="onSavedSelectionChanged(this)">`;
+
+          const detailBtnHtml = isDeleted
+            ? `<span style="font-size:12px; color:#999; font-weight:bold; border:1px solid #ccc; padding:4px 8px; border-radius:4px;">Deleted</span>`
+            : `<button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${finalIdx})">View Details</button>`;
+
           tr.innerHTML = `
-            <td><input type="checkbox" onchange="onSavedSelectionChanged(this)"></td>
+            <td>${checkboxHtml}</td>
             <td>${escapeHtml(test.dateTime || 'N/A')}</td>
             <td>${escapeHtml(test.reportNumber || 'N/A')}</td>
             <td>${escapeHtml(test.machine || test.machineId || 'N/A')}</td>
@@ -4104,7 +4129,7 @@
             <td>${escapeHtml(test.avgCSP || test.metrics?.avgCSP || '-')}</td>
             <td>${escapeHtml(test.outOfLimitCount || '0.0')}%</td>
             <td><strong>${(test.rows || []).length}</strong></td>
-            <td><button class="btn-muted" style="margin:0; padding:8px 12px;" onclick="viewDetailsByRow(event, ${finalIdx})">View Details</button></td>
+            <td>${detailBtnHtml}</td>
           `;
         } else {
           // Sliver fallback or legacy sliver
