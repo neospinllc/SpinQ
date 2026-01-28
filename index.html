@@ -4553,7 +4553,7 @@
               </div>
               <div style="display:flex; gap:10px;">
                 <button class="btn-muted" onclick="closeDetails()" style="margin:0;">Close</button>
-                <button class="btn-print" onclick="printDetails()" style="margin:0;">Print This Report</button>
+                <button class="btn-print" onclick="printDetails(${revIndex})" style="margin:0;">Print This Report</button>
               </div>
             </div>
             
@@ -4726,9 +4726,21 @@
     // -----------------------------
     // Printing (multi-page, per product breaks)
     // -----------------------------
-    function printDetails() {
-      console.log('printDetails called', detailsTest);
-      if (!detailsTest) {
+    function printDetails(optionalIndex) {
+      let testToPrint = detailsTest;
+
+      // Fail-safe: If global is missing but index is provided, re-fetch
+      if (!testToPrint && typeof optionalIndex !== 'undefined' && optionalIndex !== null) {
+        console.warn('detailsTest missing, re-fetching via index:', optionalIndex);
+        const saved = getSavedTests();
+        testToPrint = saved[optionalIndex];
+        // Restore global for consistency if found
+        if (testToPrint) detailsTest = testToPrint;
+      }
+
+      console.log('printDetails called', testToPrint);
+
+      if (!testToPrint) {
         console.error('No detailsTest found to print.');
         return alert("Error: No report selected to print.");
       }
@@ -4736,11 +4748,11 @@
       // Safety: Should not happen, but if isPrinting is stuck, warn or reset? 
       // For now, let's rely on the called functions, but log intent.
 
-      if (detailsTest.testType === 'Count & Strength' || detailsTest.rawData) {
+      if (testToPrint.testType === 'Count & Strength' || testToPrint.rawData) {
         // Ensure we are not silently blocked
-        printCountStrengthTest(detailsTest, 'all');
+        printCountStrengthTest(testToPrint, 'all');
       } else {
-        printFromTests([detailsTest], `Saved Report ${detailsTest.reportNumber}`);
+        printFromTests([testToPrint], `Saved Report ${testToPrint.reportNumber}`);
       }
     }
 
