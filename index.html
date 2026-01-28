@@ -2481,6 +2481,8 @@
         document.getElementById('metrics').style.display = 'none';
 
         let reportCounter = getReportCounter();
+        reportCounter++;
+        setReportCounter(reportCounter);
         document.getElementById('reportNumber').value = reportCounter;
 
         document.getElementById('selMachine').value = "";
@@ -2750,11 +2752,7 @@
           });
         }
 
-        // Attach change listeners to auto-save
-        PRODUCT_INPUT_IDS.forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.addEventListener('change', saveProductConfigs);
-        });
+
 
         let reportCounter = getReportCounter();
         reportCounter++;
