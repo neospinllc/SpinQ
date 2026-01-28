@@ -204,13 +204,6 @@
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
     }
 
-    .product-special {
-      background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-    }
-
-    .product-custom {
-      background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
-    }
 
     .product-header {
       margin-bottom: 12px;
@@ -222,13 +215,6 @@
       color: #1a237e;
     }
 
-    .product-special .product-name {
-      color: #e65100;
-    }
-
-    .product-custom .product-name {
-      color: #880e4f;
-    }
 
     .product-inputs {
       display: flex;
@@ -258,14 +244,7 @@
       border-color: rgba(0, 0, 0, 0.2);
     }
 
-    /* Product row colors in data entry table */
-    .row-special {
-      background-color: #fff3e0 !important;
-    }
 
-    .row-custom {
-      background-color: #fce4ec !important;
-    }
 
     button {
       padding: 12px 22px;
@@ -2545,7 +2524,7 @@
     // -----------------------------
     const TOTAL_CARDS = 15;
     const COILERS_PER_CARD = 4;
-    const PRODUCT_OPTIONS_BASE = ["Special"];
+    const PRODUCT_OPTIONS_BASE = [];
     const PRODUCT_DEFAULT = "";
 
     function getProductOptions() {
@@ -2559,9 +2538,7 @@
     }
 
     function getProductColorClass(productName) {
-      const name = (productName || '').toLowerCase().trim();
-      if (name === 'special') return 'special';
-      return 'custom';
+      return 'custom'; // No product-specific colors in Count & Skein module
     }
 
     let cardRows = [];
@@ -2705,10 +2682,8 @@
         }
       }
 
-      processProduct(null, 't_special', 'r_special', 'c_special', 'Special');
-      processProduct('t_custom_name', 't_custom', 'r_custom', 'c_custom', 'Custom Product');
-
-      return assignments;
+      // No product-specific processing in Count & Skein Strength module
+      return {};
     }
 
     // -----------------------------
@@ -2878,41 +2853,15 @@
     // -----------------------------
     // Targets (top inputs)
     // -----------------------------
+    // No product-specific targets or ranges in Count & Skein Strength module
     function getTargets() {
-      const map = {
-        "Special": parseFloat(document.getElementById('t_special').value)
-      };
-      const out = {};
-      for (const k of Object.keys(map)) {
-        const v = map[k];
-        out[k] = (isFinite(v) && v > 0) ? v : null;
-      }
-      // Add custom product if name and target are provided
-      const customName = document.getElementById('t_custom_name')?.value?.trim();
-      const customTarget = parseFloat(document.getElementById('t_custom')?.value);
-      if (customName && isFinite(customTarget) && customTarget > 0) {
-        out[customName] = customTarget;
-      }
-      return out;
+      return {};
     }
 
     function getAcceptableRanges() {
-      const ranges = {
-        "Special": parseFloat(document.getElementById('r_special')?.value || '5.0')
-      };
-      // Validate ranges
-      for (const k of Object.keys(ranges)) {
-        const v = ranges[k];
-        if (!isFinite(v) || v < 0.5 || v > 20) ranges[k] = 5.0;
-      }
-      // Add custom product range if custom product exists
-      const customName = document.getElementById('t_custom_name')?.value?.trim();
-      const customTarget = parseFloat(document.getElementById('t_custom')?.value);
-      if (customName && isFinite(customTarget) && customTarget > 0) {
-        // Legacy support or ignore
-      }
-      return ranges;
+      return {};
     }
+
 
     function getAcceptableRange(productNameIgnored) {
       // Always return the global setting from txtRange as requested
@@ -2963,10 +2912,8 @@
       const allCards = [];
       const overlaps = new Set();
 
-      const productInputs = [
-        { id: 'c_special', name: 'Special' },
-        { id: 'c_custom', name: 'Custom Product' }
-      ];
+      // No product-specific validation in Count & Skein Strength module
+      const productInputs = [];
 
       productInputs.forEach(p => {
         const el = document.getElementById(p.id);
@@ -3056,14 +3003,7 @@
       }
 
       // Reset all form fields
-      // Reset targets
-      document.getElementById('t_special').value = '';
-      document.getElementById('t_custom').value = '';
-      document.getElementById('t_custom_name').value = '';
-
-      // Reset acceptable ranges to default (5.0)
-      document.getElementById('r_special').value = '5.0';
-      document.getElementById('r_custom').value = '5.0';
+      // No product-specific input resets in Count & Skein Strength module
 
       // Reset operator name (do NOT reset if we want persistent default, but "Start New Test" implies fresh canvas)
       // Requirement: "last entered operator name should come as default when the page loaded next time"
@@ -3217,7 +3157,7 @@
 
       // Remove all product color classes
       if (tr) {
-        tr.classList.remove('row-special', 'row-custom');
+        // No product-specific CSS classes in Count & Skein Strength module
         // Add appropriate color class based on product
         if (product) {
           const colorClass = getProductColorClass(product);
