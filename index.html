@@ -1364,7 +1364,11 @@
         <div class="details-header"
           style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #e2e8f0; padding-bottom:12px;">
           <h2 style="margin:0; font-size:20px; color:#1e293b;">Combined Data Analysis</h2>
-          <button class="btn-muted" onclick="closeCombinedDetails()">Close Analysis</button>
+          <div>
+            <button class="btn-start" onclick="printCombinedAnalysis()" style="margin-right:10px;">Print
+              Analysis</button>
+            <button class="btn-muted" onclick="closeCombinedDetails()">Close Analysis</button>
+          </div>
         </div>
 
         <div id="combinedMetrics"
@@ -2399,12 +2403,54 @@
     function onSavedSelectionChanged(changedCb) {
       const checkboxes = document.querySelectorAll('#savedList input[type="checkbox"]');
       const selected = Array.from(checkboxes).filter(cb => cb.checked);
+      const saved = getSavedTests();
 
-      // We no longer lock to a specific lot for combined analysis
+      let refLot = null;
+      let refCount = null;
+
+      // Identify reference criteria from the first selected item
+      if (selected.length > 0) {
+        const firstRow = selected[0].closest('tr');
+        if (firstRow) {
+          const idx = parseInt(firstRow.getAttribute('data-original-index'), 10);
+          if (!isNaN(idx) && saved[idx]) {
+            refLot = saved[idx].lotNumber;
+            refCount = saved[idx].yarnCount || saved[idx].targetCount; // Handle alias
+          }
+        }
+      }
+
+      // Enforce constraint
       checkboxes.forEach(cb => {
-        cb.disabled = false;
         const row = cb.closest('tr');
-        if (row) row.style.opacity = '1';
+        if (!row) return;
+
+        if (!refLot) {
+          // Nothing selected yet -> All enabled
+          cb.disabled = false;
+          row.style.opacity = '1';
+        } else {
+          // Check against reference
+          const idx = parseInt(row.getAttribute('data-original-index'), 10);
+          const test = saved[idx];
+
+          if (test) {
+            const tLot = test.lotNumber;
+            const tCount = test.yarnCount || test.targetCount;
+
+            // Check match (relaxed equality for basic types)
+            const match = (tLot == refLot) && (String(tCount) === String(refCount));
+
+            if (!match) {
+              cb.disabled = true;
+              cb.checked = false; // Auto-uncheck if it somehow got checked
+              row.style.opacity = '0.5';
+            } else {
+              cb.disabled = false;
+              row.style.opacity = '1';
+            }
+          }
+        }
       });
 
       const anyChecked = selected.length > 0;
@@ -5581,6 +5627,111 @@
     }
 
     let combinedChartInstances = new Map();
+
+    function printCombinedAnalysis() {
+      const indices = getSelectedSavedIndices();
+      const saved = getSavedTests();
+      const selectedTests = indices.map(i => saved[i]).filter(Boolean);
+
+      if (selectedTests.length === 0) return alert("No tests selected.");
+
+      const printSection = document.getElementById('printSection');
+      const printMeta = document.getElementById('printMeta');
+      const printChartsContainer = document.getElementById('printChartsContainer');
+      const printTablesContainer = document.getElementById('printTablesContainer');
+
+      // Set Title
+      document.getElementById('printTitle').textContent = "Combined Data Analysis Report";
+
+      // 1. Generate Metadata Header
+      const reportNums = selectedTests.map(t => t.reportNumber).filter(Boolean).join(', ');
+
+      // Get unique Lots and Counts (should be single if constraint works, but handle multiple just in case)
+      const lots = Array.from(new Set(selectedTests.map(t => t.lotNumber || '-'))).join(', ');
+      const counts = Array.from(new Set(selectedTests.map(t => t.yarnCount || t.targetCount || '-'))).join(', ');
+      const machines = Array.from(new Set(selectedTests.map(t => t.machine || t.machineId || '-'))).join(', ');
+      const products = Array.from(new Set(selectedTests.map(t => t.product || '-'))).join(', ');
+
+      printMeta.innerHTML = `
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-bottom:15px; font-size:12px;">
+           <div><strong>Report #(s):</strong> ${escapeHtml(reportNums)}</div>
+           <div><strong>Lot Number:</strong> ${escapeHtml(lots)}</div>
+           <div><strong>Target Count:</strong> ${escapeHtml(counts)}</div>
+           <div><strong>Machine:</strong> ${escapeHtml(machines)}</div>
+           <div><strong>Product:</strong> ${escapeHtml(products)}</div>
+           <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
+        </div>
+      `;
+
+      // 2. Clone Metrics
+      const metricsSource = document.getElementById('combinedMetrics');
+      if (metricsSource) {
+        // Create a visually similar structure for print
+        // We can clone the innerHTML, but ensure styling is print-friendly
+        const metricsContainer = document.createElement('div');
+        metricsContainer.style.cssText = "display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; margin-bottom:20px;";
+        metricsContainer.innerHTML = metricsSource.innerHTML;
+        printTablesContainer.innerHTML = ''; // Clear previous
+        printTablesContainer.appendChild(metricsContainer);
+      }
+
+      // 3. Clone Charts
+      // We need to re-render charts because canvas cannot be simply moved if we want them to remain in the modal.
+      // Better strategy: Capture images of the existing charts in the modal.
+      printChartsContainer.innerHTML = '';
+
+      const chartIds = ['combined_avg_chart', 'combined_single_chart'];
+      chartIds.forEach(id => {
+        const canvas = document.getElementById(id);
+        if (canvas) {
+          const img = document.createElement('img');
+          img.src = canvas.toDataURL('image/png');
+          img.style.width = '100%';
+          img.style.marginBottom = '20px';
+          img.style.border = '1px solid #ddd';
+
+          const card = document.createElement('div');
+          card.innerHTML = `<h4 style="margin:0 0 10px 0; text-align:center;">${id === 'combined_avg_chart' ? 'Average Counts Distribution' : 'Single Values Distribution'}</h4>`;
+          card.appendChild(img);
+          printChartsContainer.appendChild(card);
+        }
+      });
+
+      // 4. Show Print View
+      const mainContainer = document.querySelector('.container');
+      const originalDisplay = mainContainer ? mainContainer.style.display : '';
+
+      if (mainContainer) mainContainer.style.display = 'none';
+      printSection.style.cssText = `
+        display:block !important;
+        visibility:visible !important;
+        position:static !important;
+        width:100% !important;
+        height:auto !important;
+        z-index:99999 !important;
+        background:white !important;
+      `;
+
+      // 5. Print and Restore
+      window.scrollTo(0, 0);
+      setTimeout(() => {
+        window.print();
+
+        // Restore function
+        const restore = () => {
+          printSection.style.cssText = 'display:none;';
+          if (mainContainer) mainContainer.style.display = originalDisplay || 'block';
+          printChartsContainer.innerHTML = ''; // Clear images
+          printTablesContainer.innerHTML = '';
+          // Ensure modal is still visible
+          document.getElementById('combinedDetailsPanel').scrollIntoView();
+        };
+
+        window.addEventListener('afterprint', restore, { once: true });
+        // Fallback in case afterprint fails (mobile sometimes)
+        setTimeout(restore, 2000);
+      }, 500);
+    }
 
     function viewCombinedData() {
       const panel = document.getElementById('combinedDetailsPanel');
