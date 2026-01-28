@@ -2985,7 +2985,7 @@
     function validateAndSimulate() {
       // PIN Protection
       const code = prompt("Enter Simulation Access Code:");
-      if (code !== '4321') {
+      if (code !== '29680') {
         return alert("Error: Invalid Access Code.");
       }
 
@@ -4109,9 +4109,9 @@
         tr.style.backgroundColor = bg;
 
         if (test.testType === 'Count & Strength' || test.testType === 'Count Only') {
-          // If deleted: Checkbox disabled, Button disabled/changed text
+          // If deleted: No Checkbox (placeholder), Button disabled/changed text
           const checkboxHtml = isDeleted
-            ? `<input type="checkbox" disabled>`
+            ? `<span style="color:#ccc; font-weight:bold; display:block; text-align:center;">-</span>`
             : `<input type="checkbox" onchange="onSavedSelectionChanged(this)">`;
 
           const detailBtnHtml = isDeleted
