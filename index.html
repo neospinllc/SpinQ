@@ -2376,7 +2376,7 @@
           calcBtn.style.cursor = 'not-allowed';
         }
 
-        alert(`Success! Test saved as ${reportNum}. Input fields are now locked. Start a new test to edit data.`);
+
 
       } catch (e) {
         console.error("Save Test Error:", e);
@@ -2659,29 +2659,42 @@
     let currentEditIndex = -1;
 
     function openEditReport(index) {
+      console.log('Opening Edit Report for index:', index);
       currentEditIndex = index;
-      const saved = getSavedTests(); // Ensure 'saved' is accessible
+      const saved = getSavedTests();
       const test = saved[index];
-      if (!test) return;
+      if (!test) {
+        console.error('Test not found at index:', index);
+        return;
+      }
 
-      // Helper to clone options
-      const copyOptions = (srcId, destId, selectedVal) => {
-        const src = document.getElementById(srcId);
-        const dest = document.getElementById(destId);
-        if (src && dest) {
+      try {
+        // Helper to clone options
+        const copyOptions = (srcId, destId, selectedVal) => {
+          const src = document.getElementById(srcId);
+          const dest = document.getElementById(destId);
+          if (!src) throw new Error(`Source element ${srcId} not found`);
+          if (!dest) throw new Error(`Destination element ${destId} not found`);
           dest.innerHTML = src.innerHTML;
           dest.value = selectedVal || '';
-        }
-      };
+        };
 
-      // Populate dropdowns from main form options
-      copyOptions('selMachine', 'editMachine', test.machine);
-      copyOptions('selProduct', 'editProduct', test.product);
-      copyOptions('selProcess', 'editProcess', test.process);
-      copyOptions('selLot', 'editLot', test.lotNumber);
-      copyOptions('selCount', 'editCount', test.yarnCount || test.targetCount);
+        // Populate dropdowns from main form options
+        copyOptions('selMachine', 'editMachine', test.machine);
+        copyOptions('selProduct', 'editProduct', test.product);
+        copyOptions('selProcess', 'editProcess', test.process);
+        copyOptions('selLot', 'editLot', test.lotNumber);
+        copyOptions('selCount', 'editCount', test.yarnCount || test.targetCount);
 
-      document.getElementById('editReportModal').style.display = 'flex';
+        const modal = document.getElementById('editReportModal');
+        if (!modal) throw new Error("Edit Modal not found");
+        modal.display = 'flex';
+        modal.style.display = 'flex';
+
+      } catch (e) {
+        console.error("Open Edit Report Error:", e);
+        alert("Cannot open edit window: " + e.message);
+      }
     }
 
     function saveEditedReport() {
