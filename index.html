@@ -1446,9 +1446,9 @@
     <div id="printMetrics" style="display:flex; gap:6px; justify-content:center; margin: 4px 0; flex-wrap:wrap;">
     </div>
 
-    <div id="printChartsContainer"></div>
+    <div id="printTablesContainer" style="margin-top: 10px;"></div>
 
-    <div id="printTablesContainer" style="margin-top: 18px;"></div>
+    <div id="printChartsContainer"></div>
   </div>
 
   <script>
@@ -5681,18 +5681,24 @@
       printChartsContainer.innerHTML = '';
 
       const chartIds = ['combined_avg_chart', 'combined_single_chart'];
+
       chartIds.forEach(id => {
         const canvas = document.getElementById(id);
         if (canvas) {
           const img = document.createElement('img');
           img.src = canvas.toDataURL('image/png');
+          // OPTIMIZED FOR ONE PAGE: Reduced max-height and margins
           img.style.width = '100%';
-          img.style.marginBottom = '20px';
+          img.style.maxHeight = '280px';
+          img.style.objectFit = 'contain';
+          img.style.marginBottom = '5px';
           img.style.border = '1px solid #ddd';
 
           const card = document.createElement('div');
-          card.innerHTML = `<h4 style="margin:0 0 10px 0; text-align:center;">${id === 'combined_avg_chart' ? 'Average Counts Distribution' : 'Single Values Distribution'}</h4>`;
+          // Tighter packing
+          card.innerHTML = `<h4 style="margin:0 0 4px 0; text-align:center; font-size:12px;">${id === 'combined_avg_chart' ? 'Average Counts Distribution' : 'Single Values Distribution'}</h4>`;
           card.appendChild(img);
+          card.style.marginBottom = '10px';
           printChartsContainer.appendChild(card);
         }
       });
