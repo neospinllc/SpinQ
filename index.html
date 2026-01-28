@@ -2174,9 +2174,19 @@
       }
 
       // CRITICAL: Verify that there are actual samples (prevent empty saves)
+      console.log("DEBUG Save Validation:", {
+        currentTestExists: !!currentTest,
+        sampleCount: currentTest?.sampleCount,
+        testType: currentTest?.testType,
+        avgCount: currentTest?.avgCount
+      });
+
       if (!currentTest.sampleCount || currentTest.sampleCount === 0) {
+        console.error("BLOCKED SAVE: sampleCount is zero or missing!");
         return alert("Cannot save: No samples detected. Please enter weight values in the data entry form before saving.");
       }
+
+      console.log("✓ Sample count validation passed:", currentTest.sampleCount, "samples");
 
       // Check if this is a count-only test (no strength data)
       const hasCountOnlyData = currentTest.testType === 'Count Only';
