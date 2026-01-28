@@ -2985,6 +2985,7 @@
     function validateAndSimulate() {
       // PIN Protection
       const code = prompt("Enter Simulation Access Code:");
+      console.log('Validating simulation access...');
       if (code !== '29680') {
         return alert("Error: Invalid Access Code.");
       }
