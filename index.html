@@ -5653,13 +5653,15 @@
       const products = Array.from(new Set(selectedTests.map(t => t.product || '-'))).join(', ');
 
       printMeta.innerHTML = `
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-bottom:15px; font-size:12px;">
-           <div><strong>Report #(s):</strong> ${escapeHtml(reportNums)}</div>
-           <div><strong>Lot Number:</strong> ${escapeHtml(lots)}</div>
-           <div><strong>Target Count:</strong> ${escapeHtml(counts)}</div>
-           <div><strong>Machine:</strong> ${escapeHtml(machines)}</div>
-           <div><strong>Product:</strong> ${escapeHtml(products)}</div>
-           <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
+        <div style="margin-bottom:15px; font-size:11px;">
+           <div style="margin-bottom:8px; line-height:1.4;"><strong>Report #(s):</strong> ${escapeHtml(reportNums)}</div>
+           <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px;">
+               <div><strong>Lot Number:</strong> ${escapeHtml(lots)}</div>
+               <div><strong>Target Count:</strong> ${escapeHtml(counts)}</div>
+               <div><strong>Machine:</strong> ${escapeHtml(machines)}</div>
+               <div><strong>Product:</strong> ${escapeHtml(products)}</div>
+               <div><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
+           </div>
         </div>
       `;
 
@@ -5689,7 +5691,7 @@
           img.src = canvas.toDataURL('image/png');
           // OPTIMIZED FOR ONE PAGE: Reduced max-height and margins
           img.style.width = '100%';
-          img.style.maxHeight = '280px';
+          img.style.maxHeight = '240px';
           img.style.objectFit = 'contain';
           img.style.marginBottom = '5px';
           img.style.border = '1px solid #ddd';
